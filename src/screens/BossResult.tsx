@@ -1,4 +1,5 @@
 import styles from './BossResult.module.css';
+import Footer from '../components/Footer';
 
 interface Props {
   won: boolean;
@@ -53,6 +54,8 @@ export default function BossResult({ won, bossHp, zoneNo, badge, firstClear, bon
           再戰教授
         </button>
       </div>
+
+      <Footer />
     </main>
   );
 }

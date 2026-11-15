@@ -1,6 +1,6 @@
 import styles from './Footer.module.css';
 
-/** 作者頁尾（首頁與結算頁共用，CLAUDE.md 第 7 節）。 */
+/** 作者頁尾（首頁與三個結果頁共用，CLAUDE.md 第 7 節）。 */
 export default function Footer() {
   return (
     <footer className={styles.footer}>

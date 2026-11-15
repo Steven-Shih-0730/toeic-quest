@@ -1,4 +1,5 @@
 import styles from './BattleResult.module.css';
+import Footer from '../components/Footer';
 import type { BattleOutcome } from './Battle';
 import type { PlayerInfo } from '../lib/battle/types';
 
@@ -68,6 +69,8 @@ export default function BattleResult({ me, outcome, reward, rating, onHome, onRe
           再戰一場
         </button>
       </div>
+
+      <Footer />
     </main>
   );
 }
