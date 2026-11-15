@@ -101,6 +101,8 @@ npm run test
 
 ## 部署到 Vercel
 
+線上版已連上這個 GitHub repo：push 到 `master` 會自動部署正式版，其他分支會產生預覽版。以下是自己從頭部署的步驟。
+
 1. 在 Vercel 匯入這個專案。Framework 選 Vite；Build Command 用 `npm run build`，Output Directory 用 `dist`。
 2. 在 Project Settings → Environment Variables 設定：
 
