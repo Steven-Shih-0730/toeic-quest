@@ -28,7 +28,8 @@ TOEIC Quest 是給「準備多益的大學生」用的手機網頁 App。它用 
 
 部署資訊：
 
-- 正式網址：https://toeic-quest-swart.vercel.app（Vercel 專案 `toeic-quest`；本機用 `npx vercel deploy --prod` 重新部署）
+- 正式網址：https://toeic-quest-swart.vercel.app（Vercel 專案 `toeic-quest`）
+- GitHub：https://github.com/Steven-Shih-0730/toeic-quest（已連上 Vercel：push 到 `master` 自動部署正式版，其他分支產生預覽版）
 - Supabase 專案：`toeic-quest`（東京，只用 Realtime，沒有資料表）
 - `VITE_SHOW_DEMO_PANEL=true`（正式版與預覽版都顯示齒輪，方便工作坊展示「模擬隔天」；要隱藏時在 Vercel 改成 `false` 再重新部署）
 - 部署保護：正式網址公開，預覽版需登入 Vercel
