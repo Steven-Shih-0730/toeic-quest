@@ -17,12 +17,20 @@
   - 快速配對：跟機器人「阿明」打。
   - 建立房間／輸入房號：和朋友用手機連線對戰（Supabase Realtime）。對手斷線時可以改跟機器人打完。
 - **展示用控制面板**（右上角 ⚙️）：模擬隔天、重設 demo、解鎖本區 Boss。
+- **PWA**：可以加到手機主畫面，打開時全螢幕。載入過一次後，沒有網路也能玩今日關卡、Boss 關和機器人對戰（連線對戰需要網路）。新版部署後會自動更新。
+
+### 加到主畫面
+
+- **iPhone（Safari）**：打開網址 → 下方「分享」按鈕 →「加入主畫面」。
+- **Android（Chrome）**：打開網址 → 右上角選單 →「安裝應用程式」或「加到主畫面」。
 
 題目全部原創，不使用 ETS 官方或市售題本內容。
 
 ## 技術
 
-Vite + React + TypeScript、CSS Modules、Vitest、Supabase Realtime（只用 Broadcast 與 Presence，不建資料表、不需登入）、Vercel。進度存在瀏覽器的 localStorage。
+Vite + React + TypeScript、CSS Modules、Vitest、Supabase Realtime（只用 Broadcast 與 Presence，不建資料表、不需登入）、vite-plugin-pwa、Vercel。進度存在瀏覽器的 localStorage。
+
+開發模式（`npm run dev`）不啟用 service worker。要在本機測試 PWA 與離線，請用 `npm run build` 再 `npm run preview`。
 
 ## 本機啟動
 

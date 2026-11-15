@@ -1,6 +1,6 @@
 .panel {
   position: absolute;
-  top: 62px;
+  top: calc(100% + 6px); /* 頂部列正下方（含 iPhone 安全區） */
   right: 10px;
   width: 250px;
   max-width: calc(100% - 20px);

@@ -21,6 +21,7 @@ TOEIC Quest 是給「準備多益的大學生」用的手機網頁 App。它用 
 - [x] 階段 4：Boss 關與對戰（機器人對手）
 - [x] 階段 5：真人連線對戰（Supabase Realtime）
 - [x] 階段 6：部署到 Vercel
+- [x] 階段 7：PWA（可安裝到主畫面、離線遊玩單人模式）
 
 完成一個階段就把對應項目打勾。
 
@@ -41,6 +42,7 @@ TOEIC Quest 是給「準備多益的大學生」用的手機網頁 App。它用 
 | 即時連線 | Supabase Realtime（Broadcast + Presence） | 不用自己架伺服器，第一版不需要建資料表 |
 | 測試 | Vitest | 間隔重複與計分邏輯一定要有測試 |
 | 部署 | Vercel | |
+| PWA | vite-plugin-pwa（Workbox） | 自動產生 manifest 與 service worker |
 
 環境變數（放在 `.env.local`，不要 commit；`.gitignore` 已排除 `node_modules`、`dist`、`.env.local`）：
 
@@ -54,6 +56,7 @@ VITE_SUPABASE_ANON_KEY=
 ```
 reference/demo.html        # artifact 做好的 demo（打包檔），不直接修改
 reference/demo-source.html # demo 解開後的原始碼，開發時以這份為參考
+public/icons/              # PWA 圖示 PNG（深藍底、金色圓、⚔️，用 Chrome 算圖產生）
 src/
   data/questions.ts        # 題庫
   data/seed.ts             # demo 用初始假資料
@@ -228,6 +231,18 @@ interface Player {
 
 動畫：答對變綠＋彈跳、答錯變紅＋抖動、Combo 橫幅從左滑入、今日節點閃爍、卡片淡入上升；需尊重 `prefers-reduced-motion`。
 
+PWA（階段 7）：
+
+- 可以「加到主畫面」，打開時全螢幕顯示（`display: standalone`）、直式（`orientation: portrait`）。
+- manifest：名稱「多益打怪 TOEIC Quest」、短名稱「多益打怪」、語言 `zh-Hant`、主題色與背景色 `#0f1b3d`。
+- 圖示：深藍底、金色圓、⚔️。尺寸 192、512、512 maskable（重點在中間 80% 安全區）、iPhone 用 180（apple-touch-icon）。
+- 離線：
+  - 第一次載入後，程式、樣式、圖示都快取起來，沒有網路也能打開並玩今日關卡、Boss 關、機器人對戰。
+  - Google Fonts 用 cache-first 快取，沒網路時沒快取到就退回系統字型。
+  - 連線對戰需要網路，Supabase 的連線不經過 service worker。
+- 更新：新版部署後自動更新（`registerType: 'autoUpdate'`），下次打開就是新版，不跳詢問。
+- 開發模式（`npm run dev`）不啟用 service worker，避免快取干擾開發。
+
 初始假資料（`seed.ts`，日期以重設當下的 `today()` 為基準）：小陳 Lv.3、本級 240 XP、連續 6 天、`lastActiveDate` = 昨天、`clearedStages` = [1..6]；快忘清單 reimburse、invoice（今天到期）、itinerary（明天到期）、deadline（3 天後到期）。初始沒有已記住的字（已記住 0 字）。
 
 ## 8. 真人連線對戰設計（Supabase Realtime）
@@ -309,4 +324,5 @@ type BattleMsg =
 - 長期運行的考量：這一版定位為 demo，不處理題庫長期耗盡、存檔版本遷移等問題
 - 好友系統、真實排行榜（排行榜先用假資料，不放進資料模型）
 - 付費機制
+- 推播通知（例如「你的快忘字到期了」）
 - 第 2～5 區的題庫（地圖上顯示「即將推出」）
