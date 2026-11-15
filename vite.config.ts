@@ -13,7 +13,7 @@ export default defineConfig({
       manifest: {
         name: '多益打怪 TOEIC Quest',
         short_name: '多益打怪',
-        description: '把答錯的題目、快忘的單字，變成每天 5 分鐘的闖關遊戲。',
+        description: '把答錯的題目、快忘的單字，變成每天 5 分鐘的闖關遊戲。作者：施定宇 (Steven Shih)',
         lang: 'zh-Hant',
         start_url: '/',
         scope: '/',
