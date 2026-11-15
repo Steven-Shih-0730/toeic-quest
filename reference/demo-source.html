@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="zh-Hant"><head>
+<meta charset="utf-8">
+<title>多益打怪 TOEIC Quest</title>
+<script src="568343ce-2606-4f23-9bcf-5ca6b53dc6dc"></script>
+<meta name="hz:slide-selector" content="[data-canvas-width]"><meta name="hz:canvas-width" content="390"><meta name="hz:canvas-height" content="844"></head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#9db8ff}a:hover{color:#c5d5ff}
+button{font-family:inherit;cursor:pointer}
+button:disabled{cursor:default}
+button:focus-visible{outline:3px solid #ffc93c;outline-offset:2px}
+.scroll::-webkit-scrollbar{width:0;height:0}
+.opt.ok{background:#2ecc71!important;border-color:#2ecc71!important;color:#06281a!important;animation:pop .45s ease}
+.opt.bad{background:#ff5a5f!important;border-color:#ff5a5f!important;color:#2b0508!important;animation:shake .45s ease}
+.opt.dim{opacity:.45}
+.node{width:52px;height:52px;border-radius:50%;border:3px solid #35488f;background:#16224a;color:#a9b6e0;font-size:18px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0}
+.node.done{background:#2ecc71;border-color:#2ecc71;color:#06281a}
+.node.today{background:#ffc93c;border-color:#fff1c2;color:#3a2a00;animation:blink 1.1s ease-in-out infinite}
+.node.boss{background:#3a1f5e;border-color:#ffc93c;color:#fff;font-size:22px}
+.node.cleared{background:#ffc93c;border-color:#fff1c2}
+.chip{display:inline-block;padding:4px 10px;border-radius:999px;font-size:13px;font-weight:700;background:#26397a;color:#dfe6ff;white-space:nowrap}
+.chip.gold{background:#ffc93c;color:#3a2a00}
+.row.me{background:#2b3f86;border-color:#ffc93c}
+.hp{width:44px;height:16px;border-radius:6px;background:#3a2030;border:2px solid #ff5a5f;transition:background .3s}
+.hp.full{background:#ff5a5f}
+.mark.ok{color:#2ecc71}
+.mark.bad{color:#ff8a8e}
+.banner{animation:slidein 1.8s ease both}
+.rise{animation:rise .35s ease both}
+.bump{animation:bump .7s ease .3s both}
+.grow{animation:grow .9s ease both}
+.spin{animation:spin .9s linear infinite}
+@keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.07)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+@keyframes blink{0%,100%{box-shadow:0 0 0 0 rgba(255,201,60,.85);transform:scale(1)}50%{box-shadow:0 0 0 9px rgba(255,201,60,0);transform:scale(1.08)}}
+@keyframes slidein{0%{transform:translateX(-110%)}14%{transform:translateX(0)}82%{transform:translateX(0)}100%{transform:translateX(110%)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes bump{0%{transform:scale(.4);opacity:0}60%{transform:scale(1.4);opacity:1}100%{transform:scale(1);opacity:1}}
+@keyframes grow{from{width:0}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01s!important;animation-iteration-count:1!important}}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; box-sizing: border-box; background: #0f1b3d; color: #f2f5ff; font-family: 'Noto Sans TC', system-ui, sans-serif; font-size: 15px; line-height: 1.5" data-canvas-width="390" data-canvas-height="844" data-document-role="page" data-label="多益打怪 TOEIC Quest">
+
+<!-- 頂部列 -->
+<div style="height: 56px; box-sizing: border-box; padding: 6px 10px; display: flex; align-items: center; gap: 8px; background: #0b1530; border-bottom: 1px solid #22326b">
+<sc-if value="{{notHome}}" hint-placeholder-val="{{false}}">
+<button sc-camel-on-click="{{goHome}}" style="min-width: 76px; height: 44px; border-radius: 12px; border: 1px solid #35488f; background: #1b2a57; color: #f2f5ff; font-size: 14px; font-weight: 700">← 首頁</button>
+</sc-if>
+<div style="flex-grow: 1; font-size: 17px; font-weight: 900; padding-left: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{topTitle}}</div>
+<button sc-camel-on-click="{{toggleSettings}}" aria-label="展示用控制面板" style="width: 44px; height: 44px; border-radius: 12px; border: 1px solid #35488f; background: #1b2a57; color: #f2f5ff; font-size: 20px">⚙️</button>
+</div>
+
+<!-- 控制面板 -->
+<sc-if value="{{settingsOpen}}" hint-placeholder-val="{{false}}">
+<div class="rise" style="position: absolute; top: 62px; right: 10px; width: 250px; z-index: 40; box-sizing: border-box; padding: 14px; border-radius: 16px; background: #1b2a57; border: 2px solid #5b8cff; box-shadow: 0 12px 30px rgba(0,0,0,.5); display: flex; flex-direction: column; gap: 10px">
+<div style="font-weight: 900; font-size: 15px">展示用控制面板</div>
+<div style="font-size: 13px; color: #c3cdf0">Demo 日期：{{dateText}}</div>
+<button sc-camel-on-click="{{nextDay}}" style="height: 46px; border-radius: 12px; border: none; background: #5b8cff; color: #061233; font-size: 15px; font-weight: 700">⏭ 模擬隔天</button>
+<button sc-camel-on-click="{{resetDemo}}" style="height: 46px; border-radius: 12px; border: 1px solid #ff8a8e; background: #2a1f3f; color: #ffd5d6; font-size: 15px; font-weight: 700">🔄 重設 demo</button>
+<button sc-camel-on-click="{{toggleSettings}}" style="height: 44px; border-radius: 12px; border: 1px solid #35488f; background: transparent; color: #c3cdf0; font-size: 14px">關閉</button>
+</div>
+</sc-if>
+
+<!-- ============ 首頁 ============ -->
+<sc-if value="{{isHome}}" hint-placeholder-val="{{true}}">
+<div class="scroll" style="height: 788px; overflow-y: auto; box-sizing: border-box; padding: 14px 14px 28px; display: flex; flex-direction: column; gap: 14px">
+
+<sc-if value="{{hasToast}}" hint-placeholder-val="{{false}}">
+<div class="rise" style="padding: 10px 12px; border-radius: 12px; background: #2b2a1a; border: 1px solid #ffc93c; color: #ffe9a8; font-size: 13px">{{toast}}</div>
+</sc-if>
+
+<div style="padding: 14px; border-radius: 18px; background: #1b2a57; display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; align-items: center; gap: 10px">
+<div style="width: 46px; height: 46px; border-radius: 50%; background: #26397a; display: flex; align-items: center; justify-content: center; font-size: 26px">🧑</div>
+<div style="flex-grow: 1">
+<div style="font-size: 17px; font-weight: 900">小陳</div>
+<div style="font-size: 13px; color: #c3cdf0">{{dateText}}</div>
+</div>
+<div style="padding: 4px 12px; border-radius: 999px; background: #ffc93c; color: #3a2a00; font-weight: 900; font-size: 15px">Lv.{{level}}</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 4px">
+<div style="height: 14px; border-radius: 999px; background: #0f1b3d; overflow: hidden">
+<div style="height: 100%; border-radius: 999px; background: #ffc93c; transition: width .7s ease; width: {{xpPct}}"></div>
+</div>
+<div style="font-size: 12px; color: #c3cdf0; text-align: right">經驗值 {{xp}} / 300</div>
+</div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+<div style="padding: 8px 10px; border-radius: 12px; background: #16224a; text-align: center">
+<div style="font-size: 12px; color: #c3cdf0">連續天數</div>
+<div style="font-size: 18px; font-weight: 900">🔥 {{streak}} 天</div>
+</div>
+<div style="padding: 8px 10px; border-radius: 12px; background: #16224a; text-align: center">
+<div style="font-size: 12px; color: #c3cdf0">已記住</div>
+<div style="font-size: 18px; font-weight: 900">📚 {{memorized}} 字</div>
+</div>
+</div>
+</div>
+
+<!-- 冒險地圖 -->
+<div style="display: flex; flex-direction: column; gap: 10px">
+<div style="font-size: 16px; font-weight: 900">🗺️ 冒險地圖</div>
+<div style="padding: 14px 12px; border-radius: 18px; background: #1b2a57; border: 2px solid #5b8cff; display: flex; flex-direction: column; gap: 12px">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 8px">
+<div style="font-weight: 900; font-size: 15px">第 1 區　報銷與財務</div>
+<span class="chip gold">{{region1Status}}</span>
+</div>
+<div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px 4px">
+<sc-for list="{{nodes}}" as="n" hint-placeholder-count="10">
+<div style="display: flex; flex-direction: column; align-items: center; gap: 3px">
+<button class="{{n.cls}}" sc-camel-on-click="{{n.go}}" disabled="{{n.off}}" aria-label="{{n.aria}}">{{n.icon}}</button>
+<div style="font-size: 11px; color: #c3cdf0; height: 16px">{{n.cap}}</div>
+</div>
+</sc-for>
+</div>
+</div>
+<sc-for list="{{regions}}" as="r" hint-placeholder-count="4">
+<div style="padding: 10px 12px; border-radius: 14px; background: #131f45; border: 1px solid #22326b; display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; justify-content: space-between; align-items: center; color: #a9b6e0; font-size: 14px; font-weight: 700">
+<span>🔒 第 {{r.no}} 區　{{r.name}}</span>
+<span style="font-size: 12px; font-weight: 400">尚未開放</span>
+</div>
+<div style="display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 6px">
+<sc-for list="{{r.dots}}" as="d" hint-placeholder-count="10">
+<div style="height: 10px; border-radius: 999px; background: #26397a"></div>
+</sc-for>
+</div>
+</div>
+</sc-for>
+</div>
+
+<!-- 大按鈕 -->
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+<button sc-camel-on-click="{{startDaily}}" style="min-height: 76px; border-radius: 18px; border: none; background: #2ecc71; color: #06281a; font-size: 18px; font-weight: 900; box-shadow: 0 5px 0 #1b8f4d; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px">
+<span>⚔️ 今日關卡</span>
+<span style="font-size: 12px; font-weight: 500">{{dailyNote}}</span>
+</button>
+<button sc-camel-on-click="{{startMatch}}" style="min-height: 76px; border-radius: 18px; border: none; background: #ffc93c; color: #3a2a00; font-size: 18px; font-weight: 900; box-shadow: 0 5px 0 #b98a12; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px">
+<span>👥 雙人對戰</span>
+<span style="font-size: 12px; font-weight: 500">互考彼此的快忘字</span>
+</button>
+</div>
+
+<!-- 快忘清單 -->
+<div style="padding: 14px; border-radius: 18px; background: #1b2a57; display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: 16px; font-weight: 900">📌 快忘清單</div>
+<div style="font-size: 12px; color: #c3cdf0">答錯的字會排進來，到期那天優先出題。</div>
+<sc-for list="{{forgetRows}}" as="f" hint-placeholder-count="4">
+<div style="display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; background: #16224a">
+<div style="flex-grow: 1">
+<div style="font-weight: 700; font-size: 16px">{{f.w}}</div>
+<div style="font-size: 12px; color: #c3cdf0">{{f.zh}}</div>
+</div>
+<span class="{{f.cls}}">{{f.when}}</span>
+</div>
+</sc-for>
+<sc-if value="{{forgetEmpty}}" hint-placeholder-val="{{false}}">
+<div style="padding: 12px; border-radius: 12px; background: #16224a; color: #c3cdf0; font-size: 14px; text-align: center">🎉 清單清空了！答錯的字會自動加進來。</div>
+</sc-if>
+</div>
+
+</div>
+</sc-if>
+
+<!-- ============ 闖關／Boss 題目頁 ============ -->
+<sc-if value="{{isQuiz}}" hint-placeholder-val="{{false}}">
+<div class="scroll" style="height: 788px; overflow-y: auto; box-sizing: border-box; padding: 14px 14px 28px; display: flex; flex-direction: column; gap: 12px">
+
+<sc-if value="{{qv.isDaily}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<div style="display: flex; justify-content: space-between; align-items: baseline">
+<div style="font-size: 17px; font-weight: 900">{{qv.title}}</div>
+<div style="font-size: 13px; color: #ffe08a; font-weight: 700">本關 +{{qv.xpGained}} 經驗值</div>
+</div>
+<div style="height: 12px; border-radius: 999px; background: #16224a; overflow: hidden">
+<div style="height: 100%; border-radius: 999px; background: #5b8cff; transition: width .5s ease; width: {{qv.progPct}}"></div>
+</div>
+<div style="display: flex; align-items: center; gap: 8px">
+<div style="font-size: 12px; color: #c3cdf0; white-space: nowrap">Lv.{{level}}</div>
+<div style="flex-grow: 1; height: 8px; border-radius: 999px; background: #16224a; overflow: hidden">
+<div style="height: 100%; border-radius: 999px; background: #ffc93c; transition: width .7s ease; width: {{xpPct}}"></div>
+</div>
+<div style="font-size: 12px; color: #c3cdf0; white-space: nowrap">{{xp}} / 300</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{qv.isBoss}}" hint-placeholder-val="{{false}}">
+<div style="padding: 12px; border-radius: 16px; background: #2a1a4a; border: 2px solid #ffc93c; display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; align-items: center; gap: 10px">
+<div style="width: 52px; height: 52px; border-radius: 50%; background: #3a1f5e; border: 2px solid #ffc93c; display: flex; align-items: center; justify-content: center; font-size: 28px">🎓</div>
+<div style="flex-grow: 1">
+<div style="font-weight: 900; font-size: 16px">命題教授　<span style="font-size: 13px; font-weight: 500; color: #e0d3ff">{{qv.title}}</span></div>
+<div style="display: flex; gap: 6px; align-items: center; margin-top: 4px">
+<span style="font-size: 12px; color: #ffd5d6">血量</span>
+<sc-for list="{{qv.hpCells}}" as="h" hint-placeholder-count="3">
+<div class="{{h.cls}}"></div>
+</sc-for>
+</div>
+</div>
+</div>
+<div style="font-size: 13px; color: #e0d3ff">「長得像的字，才是真正的考題。答對一題，扣我一格血。」</div>
+</div>
+</sc-if>
+
+<div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center">
+<span class="chip">{{qv.tag}}</span>
+<sc-if value="{{qv.hasRetry}}" hint-placeholder-val="{{false}}">
+<span class="chip gold">{{qv.retryText}}</span>
+</sc-if>
+</div>
+
+<sc-if value="{{qv.hasCtx}}" hint-placeholder-val="{{false}}">
+<div style="padding: 12px; border-radius: 14px; background: #20305f; border: 1px dashed #7f9cf0; display: flex; gap: 10px">
+<div style="font-size: 26px">💼</div>
+<div>
+<div style="font-weight: 900; font-size: 14px">實務面試官挑戰</div>
+<div style="font-size: 14px; color: #dfe6ff">{{qv.ctx}}</div>
+</div>
+</div>
+</sc-if>
+
+<div style="padding: 16px; border-radius: 16px; background: #1b2a57; font-size: 17px; line-height: 1.6; font-weight: 500">{{qv.text}}</div>
+
+<div style="display: flex; flex-direction: column; gap: 10px">
+<sc-for list="{{qv.opts}}" as="o" hint-placeholder-count="4">
+<button class="{{o.cls}}" sc-camel-on-click="{{o.pick}}" disabled="{{o.off}}" style="width: 100%; min-height: 52px; box-sizing: border-box; display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 14px; border: 2px solid #35488f; background: #1b2a57; color: #f2f5ff; font-size: 16px; font-weight: 700; text-align: left">
+<span style="width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,.14); display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0">{{o.letter}}</span>
+<span>{{o.t}}</span>
+</button>
+</sc-for>
+</div>
+
+<sc-if value="{{qv.showHint}}" hint-placeholder-val="{{false}}">
+<div class="rise" style="padding: 12px; border-radius: 14px; background: #2b2a1a; border: 2px solid #ffc93c; display: flex; gap: 10px">
+<div style="font-size: 30px">🧑‍🏫</div>
+<div style="display: flex; flex-direction: column; gap: 4px">
+<div style="font-weight: 900; font-size: 14px; color: #ffe08a">費曼教練：先別急，給你一個線索</div>
+<div style="font-size: 14px; color: #fff4d1">{{qv.hint}}</div>
+<div style="font-size: 13px; font-weight: 700; color: #ffe08a">再選一次！</div>
+<div style="font-size: 12px; color: #e8dcae">📌 「{{qv.word}}」已加入快忘清單，明天再考你</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{qv.showOk}}" hint-placeholder-val="{{false}}">
+<div class="rise" style="padding: 12px; border-radius: 14px; background: #12382a; border: 2px solid #2ecc71; display: flex; flex-direction: column; gap: 4px">
+<div style="font-weight: 900; font-size: 16px; color: #7ff0ae">✅ {{qv.okText}}</div>
+<div style="font-size: 14px; color: #dff8ea">{{qv.exp}}</div>
+<sc-if value="{{qv.showPin}}" hint-placeholder-val="{{false}}">
+<div style="font-size: 12px; color: #bfe6cf">📌 「{{qv.word}}」已加入快忘清單，明天再考你</div>
+</sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{qv.showBad}}" hint-placeholder-val="{{false}}">
+<div class="rise" style="padding: 12px; border-radius: 14px; background: #3a1a26; border: 2px solid #ff5a5f; display: flex; gap: 10px">
+<div style="font-size: 30px">🧑‍🏫</div>
+<div style="display: flex; flex-direction: column; gap: 4px">
+<div style="font-weight: 900; font-size: 15px; color: #ffb3b6">正解是「{{qv.answer}}」</div>
+<div style="font-size: 14px; color: #ffe3e4">費曼教練：{{qv.exp}}</div>
+<div style="font-size: 12px; color: #f3c4c6">📌 「{{qv.word}}」已加入快忘清單，明天再考你</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{qv.done}}" hint-placeholder-val="{{false}}">
+<button sc-camel-on-click="{{nextQ}}" style="min-height: 54px; border-radius: 16px; border: none; background: #5b8cff; color: #061233; font-size: 17px; font-weight: 900; box-shadow: 0 5px 0 #2f55b8">{{qv.nextLabel}}</button>
+</sc-if>
+
+</div>
+<sc-if value="{{qv.banner}}" hint-placeholder-val="{{false}}">
+<div class="banner" style="position: absolute; left: 0; right: 0; top: 380px; z-index: 30; padding: 14px 10px; background: #d62839; color: #ffffff; text-align: center; font-size: 19px; font-weight: 900; box-shadow: 0 8px 24px rgba(0,0,0,.45); pointer-events: none">🔥 {{qv.bannerText}}</div>
+</sc-if>
+</sc-if>
+
+<!-- ============ 關卡結算 ============ -->
+<sc-if value="{{isResult}}" hint-placeholder-val="{{false}}">
+<div class="scroll" style="height: 788px; overflow-y: auto; box-sizing: border-box; padding: 16px 14px 28px; display: flex; flex-direction: column; gap: 14px">
+<div style="text-align: center; font-size: 22px; font-weight: 900">🎉 關卡完成！</div>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px">
+<div style="padding: 12px 6px; border-radius: 16px; background: #1b2a57; text-align: center">
+<div style="font-size: 12px; color: #c3cdf0">答對題數</div>
+<div style="font-size: 24px; font-weight: 900; color: #7ff0ae">{{rv.score}}</div>
+</div>
+<div style="padding: 12px 6px; border-radius: 16px; background: #1b2a57; text-align: center">
+<div style="font-size: 12px; color: #c3cdf0">獲得經驗值</div>
+<div style="font-size: 24px; font-weight: 900; color: #ffe08a">+{{rv.xp}}</div>
+</div>
+<div style="padding: 12px 6px; border-radius: 16px; background: #1b2a57; text-align: center">
+<div style="font-size: 12px; color: #c3cdf0">連續天數</div>
+<div style="font-size: 24px; font-weight: 900">🔥 <span class="bump" style="display: inline-block; color: #ffc93c">{{rv.streak}}</span></div>
+<div style="font-size: 12px; color: #ffe08a; font-weight: 700">{{rv.streakNote}}</div>
+</div>
+</div>
+<div style="display: flex; align-items: center; gap: 8px">
+<div style="font-size: 13px; font-weight: 700; white-space: nowrap">Lv.{{level}}</div>
+<div style="flex-grow: 1; height: 12px; border-radius: 999px; background: #16224a; overflow: hidden">
+<div class="grow" style="height: 100%; border-radius: 999px; background: #ffc93c; width: {{xpPct}}"></div>
+</div>
+<div style="font-size: 12px; color: #c3cdf0; white-space: nowrap">{{xp}} / 300</div>
+</div>
+
+<div style="padding: 14px; border-radius: 16px; background: #12382a; border: 1px solid #2ecc71; display: flex; flex-direction: column; gap: 8px">
+<div style="font-weight: 900; font-size: 16px; color: #7ff0ae">💥 複仇成功</div>
+<sc-for list="{{rv.revenge}}" as="w" hint-placeholder-count="2">
+<div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 10px; background: #0d2a1f">
+<span style="font-weight: 700">{{w.w}} <span style="font-weight: 400; font-size: 13px; color: #bfe6cf">{{w.zh}}</span></span>
+<span style="font-size: 12px; color: #7ff0ae; white-space: nowrap">之前答錯 → 這次答對</span>
+</div>
+</sc-for>
+<sc-if value="{{rv.noRevenge}}" hint-placeholder-val="{{false}}">
+<div style="font-size: 13px; color: #bfe6cf">這次沒有成功複仇的字，到期的字下次還會再出現。</div>
+</sc-if>
+</div>
+
+<div style="padding: 14px; border-radius: 16px; background: #3a1a26; border: 1px solid #ff5a5f; display: flex; flex-direction: column; gap: 8px">
+<div style="font-weight: 900; font-size: 16px; color: #ffb3b6">📌 加入快忘清單</div>
+<sc-for list="{{rv.pinned}}" as="w" hint-placeholder-count="1">
+<div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 10px; background: #2a1019">
+<span style="font-weight: 700">{{w.w}} <span style="font-weight: 400; font-size: 13px; color: #f3c4c6">{{w.zh}}</span></span>
+<span style="font-size: 12px; color: #ffb3b6; white-space: nowrap">下次複習：明天</span>
+</div>
+</sc-for>
+<sc-if value="{{rv.noPinned}}" hint-placeholder-val="{{false}}">
+<div style="font-size: 13px; color: #f3c4c6">全部一次答對，這次沒有新增的字！</div>
+</sc-if>
+</div>
+
+<div style="padding: 14px; border-radius: 16px; background: #1b2a57; display: flex; flex-direction: column; gap: 8px">
+<div style="font-weight: 900; font-size: 16px">🏠 寢室排行榜（本週經驗值）</div>
+<sc-for list="{{board}}" as="p" hint-placeholder-count="3">
+<div class="{{p.cls}}" style="display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; border: 1px solid transparent">
+<div style="width: 28px; font-weight: 900; font-size: 16px; text-align: center">{{p.rank}}</div>
+<div style="font-size: 20px">{{p.icon}}</div>
+<div style="flex-grow: 1; font-weight: 700">{{p.name}}</div>
+<div style="font-weight: 900; color: #ffe08a">{{p.xp}}</div>
+</div>
+</sc-for>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+<button sc-camel-on-click="{{goHome}}" style="min-height: 54px; border-radius: 16px; border: none; background: #5b8cff; color: #061233; font-size: 16px; font-weight: 900">返回首頁</button>
+<button sc-camel-on-click="{{startMatch}}" style="min-height: 54px; border-radius: 16px; border: none; background: #ffc93c; color: #3a2a00; font-size: 16px; font-weight: 900">👥 去對戰</button>
+</div>
+</div>
+</sc-if>
+
+<!-- ============ Boss 結果 ============ -->
+<sc-if value="{{isBossEnd}}" hint-placeholder-val="{{false}}">
+<div class="scroll" style="height: 788px; overflow-y: auto; box-sizing: border-box; padding: 30px 18px 28px; display: flex; flex-direction: column; align-items: center; gap: 16px; text-align: center">
+<sc-if value="{{be.win}}" hint-placeholder-val="{{false}}">
+<div class="bump" style="width: 150px; height: 150px; border-radius: 50%; background: #ffc93c; border: 6px solid #fff1c2; box-shadow: 0 0 40px rgba(255,201,60,.55); display: flex; align-items: center; justify-content: center; font-size: 76px">🏅</div>
+<div style="font-size: 28px; font-weight: 900; color: #ffe08a">第 1 區通關！</div>
+<div style="font-size: 15px; color: #dfe6ff">命題教授被你打倒了。「……看來你真的分得清楚。」</div>
+<div style="width: 100%; box-sizing: border-box; padding: 14px; border-radius: 16px; background: #1b2a57; display: flex; flex-direction: column; gap: 6px">
+<div style="font-weight: 900; font-size: 16px">獎勵徽章：報銷與財務達人</div>
+<div style="font-size: 14px; color: #ffe08a; font-weight: 700">{{be.rewardText}}</div>
+</div>
+</sc-if>
+<sc-if value="{{be.lose}}" hint-placeholder-val="{{false}}">
+<div style="width: 150px; height: 150px; border-radius: 50%; background: #3a1f5e; border: 6px solid #ffc93c; display: flex; align-items: center; justify-content: center; font-size: 76px">🎓</div>
+<div style="font-size: 26px; font-weight: 900">差一點！</div>
+<div style="font-size: 15px; color: #dfe6ff">命題教授還剩 {{be.hp}} 格血。「易混淆字，回去再想想。」</div>
+<div style="width: 100%; box-sizing: border-box; padding: 14px; border-radius: 16px; background: #1b2a57; font-size: 14px; color: #c3cdf0">答錯的字已加入快忘清單，複習後再來挑戰。</div>
+</sc-if>
+<div style="width: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+<button sc-camel-on-click="{{goHome}}" style="min-height: 54px; border-radius: 16px; border: none; background: #5b8cff; color: #061233; font-size: 16px; font-weight: 900">返回首頁</button>
+<button sc-camel-on-click="{{startBoss}}" style="min-height: 54px; border-radius: 16px; border: 2px solid #ffc93c; background: #2a1a4a; color: #ffe08a; font-size: 16px; font-weight: 900">再戰教授</button>
+</div>
+</div>
+</sc-if>
+
+<!-- ============ 配對 ============ -->
+<sc-if value="{{isMatch}}" hint-placeholder-val="{{false}}">
+<div style="height: 788px; box-sizing: border-box; padding: 24px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; text-align: center">
+<sc-if value="{{mv.searching}}" hint-placeholder-val="{{false}}">
+<div class="spin" style="width: 84px; height: 84px; border-radius: 50%; border: 8px solid #26397a; border-top-color: #ffc93c; box-sizing: border-box"></div>
+<div style="font-size: 22px; font-weight: 900">配對中…</div>
+<div style="font-size: 14px; color: #c3cdf0">正在尋找程度相近的對手</div>
+</sc-if>
+<sc-if value="{{mv.found}}" hint-placeholder-val="{{false}}">
+<div class="rise" style="display: flex; align-items: center; gap: 18px">
+<div style="display: flex; flex-direction: column; align-items: center; gap: 6px">
+<div style="width: 84px; height: 84px; border-radius: 50%; background: #26397a; border: 3px solid #2ecc71; display: flex; align-items: center; justify-content: center; font-size: 44px">🧑</div>
+<div style="font-weight: 900">小陳 Lv.{{level}}</div>
+</div>
+<div style="font-size: 26px; font-weight: 900; color: #ffc93c">VS</div>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 6px">
+<div style="width: 84px; height: 84px; border-radius: 50%; background: #26397a; border: 3px solid #ff5a5f; display: flex; align-items: center; justify-content: center; font-size: 44px">😎</div>
+<div style="font-weight: 900">阿明 Lv.4</div>
+</div>
+</div>
+<div style="font-size: 22px; font-weight: 900">找到對手：阿明 Lv.4</div>
+<div style="font-size: 14px; color: #c3cdf0">題目來自你們兩人的快忘清單，即將開始…</div>
+</sc-if>
+<button sc-camel-on-click="{{goHome}}" style="min-height: 46px; padding: 0 22px; border-radius: 14px; border: 1px solid #35488f; background: #1b2a57; color: #f2f5ff; font-size: 15px">取消配對</button>
+</div>
+</sc-if>
+
+<!-- ============ 對戰 ============ -->
+<sc-if value="{{isBattle}}" hint-placeholder-val="{{false}}">
+<div style="height: 788px; box-sizing: border-box; padding: 12px 10px 14px; display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 8px">
+<div style="display: flex; align-items: center; gap: 8px; width: 130px">
+<div style="width: 46px; height: 46px; border-radius: 50%; background: #26397a; border: 3px solid #2ecc71; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0">🧑</div>
+<div>
+<div style="font-weight: 900; font-size: 14px">小陳</div>
+<div style="font-size: 12px; color: #c3cdf0">{{bv.meStatus}}</div>
+</div>
+</div>
+<div style="width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: conic-gradient(#ffc93c {{bv.deg}}, #26397a 0deg)">
+<div style="width: 50px; height: 50px; border-radius: 50%; background: #0f1b3d; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 900">{{bv.secs}}</div>
+</div>
+<div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px; width: 130px; text-align: right">
+<div>
+<div style="font-weight: 900; font-size: 14px">阿明</div>
+<div style="font-size: 12px; color: #c3cdf0">{{bv.oppStatus}}</div>
+</div>
+<div style="width: 46px; height: 46px; border-radius: 50%; background: #26397a; border: 3px solid #ff5a5f; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0">😎</div>
+</div>
+</div>
+
+<div style="flex-grow: 1; display: flex; gap: 8px; min-height: 0">
+<div style="width: 38px; display: flex; flex-direction: column; align-items: center; gap: 6px">
+<div style="font-size: 13px; font-weight: 900; color: #7ff0ae">{{bv.my}}</div>
+<div style="flex-grow: 1; width: 22px; border-radius: 999px; background: #16224a; display: flex; flex-direction: column; justify-content: flex-end; overflow: hidden">
+<div style="width: 100%; border-radius: 999px; background: #2ecc71; transition: height .6s ease; height: {{bv.myPct}}"></div>
+</div>
+</div>
+
+<div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; justify-content: space-between; align-items: center; gap: 6px">
+<span style="font-size: 13px; font-weight: 700; color: #c3cdf0">{{bv.round}}</span>
+<span class="chip gold" style="font-size: 12px">{{bv.src}}</span>
+</div>
+<div style="padding: 12px; border-radius: 14px; background: #1b2a57; font-size: 15px; line-height: 1.55; font-weight: 500">{{bv.text}}</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<sc-for list="{{bv.opts}}" as="o" hint-placeholder-count="4">
+<button class="{{o.cls}}" sc-camel-on-click="{{o.pick}}" disabled="{{o.off}}" style="width: 100%; min-height: 48px; box-sizing: border-box; padding: 8px 12px; border-radius: 12px; border: 2px solid #35488f; background: #1b2a57; color: #f2f5ff; font-size: 15px; font-weight: 700; text-align: center">{{o.t}}</button>
+</sc-for>
+</div>
+<div style="font-size: 12px; color: #c3cdf0; text-align: center">得分＝剩餘秒數 × 10，連續答對再 × 1.25</div>
+</div>
+
+<div style="width: 38px; display: flex; flex-direction: column; align-items: center; gap: 6px">
+<div style="font-size: 13px; font-weight: 900; color: #ffb3b6">{{bv.opp}}</div>
+<div style="flex-grow: 1; width: 22px; border-radius: 999px; background: #16224a; display: flex; flex-direction: column; justify-content: flex-end; overflow: hidden">
+<div style="width: 100%; border-radius: 999px; background: #ff5a5f; transition: height .6s ease; height: {{bv.oppPct}}"></div>
+</div>
+</div>
+</div>
+</div>
+<sc-if value="{{bv.banner}}" hint-placeholder-val="{{false}}">
+<div class="banner" style="position: absolute; left: 0; right: 0; top: 150px; z-index: 30; padding: 12px 10px; background: #d62839; color: #ffffff; text-align: center; font-size: 18px; font-weight: 900; box-shadow: 0 8px 24px rgba(0,0,0,.45); pointer-events: none">{{bv.bannerText}}</div>
+</sc-if>
+</sc-if>
+
+<!-- ============ 對戰結果 ============ -->
+<sc-if value="{{isBattleEnd}}" hint-placeholder-val="{{false}}">
+<div class="scroll" style="height: 788px; overflow-y: auto; box-sizing: border-box; padding: 24px 16px 28px; display: flex; flex-direction: column; gap: 16px">
+<div class="bump" style="text-align: center; font-size: 30px; font-weight: 900; color: #ffe08a">{{ev.title}}</div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+<div style="padding: 14px; border-radius: 16px; background: #1b2a57; border: 2px solid #2ecc71; text-align: center">
+<div style="font-size: 30px">🧑</div>
+<div style="font-weight: 700">小陳</div>
+<div style="font-size: 28px; font-weight: 900; color: #7ff0ae">{{ev.my}}</div>
+</div>
+<div style="padding: 14px; border-radius: 16px; background: #1b2a57; border: 2px solid #ff5a5f; text-align: center">
+<div style="font-size: 30px">😎</div>
+<div style="font-weight: 700">阿明</div>
+<div style="font-size: 28px; font-weight: 900; color: #ffb3b6">{{ev.opp}}</div>
+</div>
+</div>
+<div style="text-align: center; font-size: 15px; font-weight: 700; color: #ffe08a">{{ev.xpText}}</div>
+<div style="padding: 14px; border-radius: 16px; background: #1b2a57; display: flex; flex-direction: column; gap: 8px">
+<div style="font-weight: 900; font-size: 16px">📌 本場出現的你的快忘字</div>
+<sc-for list="{{ev.words}}" as="w" hint-placeholder-count="3">
+<div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 10px; background: #16224a">
+<span style="font-weight: 700">{{w.w}} <span style="font-weight: 400; font-size: 13px; color: #c3cdf0">{{w.zh}}</span></span>
+<span class="{{w.cls}}" style="font-size: 13px; font-weight: 700; white-space: nowrap">{{w.mark}}</span>
+</div>
+</sc-for>
+<sc-if value="{{ev.noWords}}" hint-placeholder-val="{{false}}">
+<div style="font-size: 13px; color: #c3cdf0">你的快忘清單是空的，這場考的都是阿明的弱點字。</div>
+</sc-if>
+</div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+<button sc-camel-on-click="{{goHome}}" style="min-height: 54px; border-radius: 16px; border: none; background: #5b8cff; color: #061233; font-size: 16px; font-weight: 900">返回首頁</button>
+<button sc-camel-on-click="{{startMatch}}" style="min-height: 54px; border-radius: 16px; border: none; background: #ffc93c; color: #3a2a00; font-size: 16px; font-weight: 900">再戰一場</button>
+</div>
+</div>
+</sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script="" data-props="{&quot;$preview&quot;:{&quot;width&quot;:390,&quot;height&quot;:844}}">
+class Component extends DCLogic {
+  state = this.loadState();
+  timers = [];
+  ticker = null;
+
+  /* ---------- 題庫（原創，共 25 題） ---------- */
+  bank() {
+    if (this._bank) return this._bank;
+    const m = (kind, w, zh, tag, q, opts, a, hint, exp, ctx) => ({ kind, w, zh, tag, q, opts, a, hint, exp, ctx: ctx || '' });
+    this._bank = [
+      // 一般情境題 15 題
+      m('g', 'reimburse', '報銷、償還', 'Email', "Please submit your receipts by Friday so that the accounting team can ------- you for your travel expenses.", ['reimburse', 'reinforce', 'remind', 'replace'], 0, 're-（回來）＋ burse（錢包，和 purse 同源）：把錢放回你的錢包。', 'reimburse 是「報銷」。你先自掏腰包墊錢，公司之後把錢還給你。'),
+      m('g', 'invoice', '請款單、發票', 'Email', "We have attached the ------- for last month's consulting services; payment is due within 30 days.", ['invitation', 'invoice', 'inventory', 'investment'], 1, '句子後半提到 payment is due：這是廠商寄來「請你付錢」的那張單子。', 'invoice 是「請款單」。賣方寄給買方，上面列出該付多少錢、何時要付。'),
+      m('g', 'itinerary', '行程表', 'Email', "The travel agency will e-mail you a detailed ------- listing your flights and hotel reservations.", ['inventory', 'identity', 'incentive', 'itinerary'], 3, '字根 itiner- 是「旅程」。想像一張寫著幾點起飛、住哪間飯店的表。', 'itinerary 是「行程表」。出差前拿到的航班與住宿安排就是它。'),
+      m('g', 'deadline', '截止期限', '公告', "All employees must complete the online safety training before the ------- of March 31.", ['outline', 'headline', 'deadline', 'guideline'], 2, 'dead（死）＋ line（線）：過了這條線就來不及了。', 'deadline 是「截止期限」。後面接日期，表示最晚要在那天前完成。'),
+      m('g', 'postpone', '延期', '會議', "Due to the director's absence, the budget meeting has been ------- until next Tuesday.", ['postponed', 'proposed', 'promoted', 'possessed'], 0, 'post-（之後）＋ pone（放）：把事情往後放。注意句中的 until。', 'postpone 是「延期」。常見搭配 postpone … until＋新的時間。'),
+      m('g', 'attendee', '出席者', '公告', "Each ------- will receive a name badge and a conference program at the registration desk.", ['attendance', 'attendant', 'attendee', 'attention'], 2, '字尾 -ee 指「人」，像 employee、interviewee。領名牌的是誰？', 'attendee 是「出席者」。attendance 是出席這件事，attendant 是服務人員。'),
+      m('g', 'budget', '預算', '會議', "The marketing team was asked to reduce costs because the project had gone over -------.", ['budget', 'capacity', 'average', 'deadline'], 0, '線索在 reduce costs：錢花得比原本規劃的還多。', 'budget 是「預算」。go over budget 就是「超出預算」。'),
+      m('g', 'candidate', '應徵者、候選人', 'Email', "After reviewing over fifty résumés, the hiring committee selected three ------- for final interviews.", ['colleagues', 'consumers', 'candidates', 'contractors'], 2, '看履歷、進面試——還在被挑選、尚未錄取的人叫什麼？', 'candidate 是「應徵者」。錄取之後才會變成 colleague（同事）。'),
+      m('g', 'negotiate', '協商、談判', '會議', "Our purchasing manager will meet the supplier next week to ------- a lower price for bulk orders.", ['navigate', 'negotiate', 'nominate', 'notify'], 1, '雙方坐下來「談條件」，談到彼此都能接受的價格。', 'negotiate 是「協商」。negotiate a price / a contract 都是多益常見搭配。'),
+      m('g', 'warranty', '保固', '公告', "All laptops purchased this month come with a two-year ------- covering parts and repairs.", ['warranty', 'warning', 'warehouse', 'withdrawal'], 0, '買電子產品時，壞掉可以免費維修的那份保障。', 'warranty 是「保固」。two-year warranty 就是兩年保固。'),
+      m('g', 'agenda', '議程', '會議', "Please review the attached ------- before the meeting so that we can cover every item on time.", ['agency', 'agreement', 'appendix', 'agenda'], 3, '開會前發的那張清單，寫著今天要討論哪幾個 item。', 'agenda 是「議程」。item on the agenda 就是議程上的討論事項。'),
+      m('g', 'renovation', '整修', '公告', "The third-floor cafeteria will be closed for ------- from Monday through Friday next week.", ['renovation', 'reservation', 'recreation', 'resignation'], 0, 're-（再）＋ nov（新，和 new 同源）：讓空間重新變新。', 'renovation 是「整修」。closed for renovation 是公告常見說法。'),
+      m('g', 'shipment', '出貨、貨件', 'Email', "We apologize for the delay; your ------- is expected to arrive at the warehouse by Thursday.", ['statement', 'shipment', 'settlement', 'supplement'], 1, 'ship 當動詞是「運送」。會「抵達倉庫」的是什麼？', 'shipment 是「貨件」。ship（運送）加上 -ment 變成名詞。'),
+      m('g', 'approve', '核准', '會議', "The board of directors is expected to ------- the merger proposal at tomorrow's session.", ['approach', 'appoint', 'approve', 'appeal'], 2, '董事會對一份提案能做的事：點頭說「可以」。', 'approve 是「核准」。approve a proposal / a budget 是固定搭配。'),
+      m('g', 'reminder', '提醒', '公告', "This is a friendly ------- that parking permits must be renewed by the end of the month.", ['remainder', 'reminder', 'receipt', 'refund'], 1, 'remind（提醒）＋ -er。小心長得很像的 remainder 是「剩下的部分」。', 'reminder 是「提醒通知」。a friendly reminder 是公告常見的開頭。'),
+      // 面試官情境題 4 題
+      m('i', 'apologize', '道歉', '面試官挑戰', "We sincerely ------- for the inconvenience and will send a replacement immediately.", ['apologize', 'appreciate', 'announce', 'approve'], 0, '客戶正在生氣。回信的第一步是感謝，還是說對不起？', 'apologize for＋事情，是客訴回信的標準開場；appreciate 是「感謝」。', '客戶來信：「我們訂的投影機送到時鏡頭已經裂了，這讓人無法接受。」你要回信，哪個字最適合？'),
+      m('i', 'available', '有空的', '面試官挑戰', "I am ------- on Wednesday afternoon if that works for your schedule.", ['avoidable', 'valuable', 'available', 'variable'], 2, '想說「我那個時段有空」。字根 avail 是「可用」。', 'available 用在人身上是「有空」，用在東西上是「有貨、可取得」。', '主管傳訊息問你下週哪個時段可以開專案會議。你要回覆，哪個字最適合？'),
+      m('i', 'extension', '延長、展期', '面試官挑戰', "Would it be possible to request a two-day ------- on the report deadline?", ['expansion', 'extension', 'exception', 'expression'], 1, '你想把期限「拉長」：ex-（向外）＋ tend（伸展）。expansion 是規模變大。', 'extension 是「延期、展延」。request an extension 是請求寬限的禮貌說法。', '你來不及在週五前交出報告，要寫信請主管多給兩天。哪個字最適合？'),
+      m('i', 'confirm', '確認', '面試官挑戰', "I am writing to ------- your appointment at 10 a.m. next Monday.", ['conform', 'confine', 'consult', 'confirm'], 3, 'firm 是「穩固」。把一件已經約好的事變得更確定。', 'confirm 是「確認」。conform 是「遵守、符合」，只差一個字母別選錯。', '客戶來信預約下週一早上拜訪。你要回信告訴對方時間沒問題，哪個字最適合？'),
+      // 命題教授陷阱題 6 題
+      m('t', 'affect', '影響（動詞）', '命題教授陷阱', "The new overtime policy will not ------- employees who work part-time.", ['effect', 'affect', 'effort', 'afford'], 1, '這格在 will not 後面，需要動詞。口訣：A 開頭是 Action（動作）。', 'affect 是動詞「影響」；effect 通常是名詞「效果」，例如 have an effect on。'),
+      m('t', 'lend', '借出', '命題教授陷阱', "Could you ------- me your laptop charger until the afternoon meeting ends?", ['rent', 'owe', 'borrow', 'lend'], 3, '東西是從「你」流向「我」。借出去和借進來是不同的字。', 'lend 是「借出」（lend me＋東西）；borrow 是「借入」（borrow＋東西＋from you）。'),
+      m('t', 'compliment', '稱讚', '命題教授陷阱', "The client paid our design team a ------- on the clarity of the presentation slides.", ['complement', 'compliment', 'compartment', 'commitment'], 1, '兩個字只差一個母音。有 i 的那個：I like it！（我稱讚你）', 'compliment 是「稱讚」，pay someone a compliment；complement 是「補足、相輔相成」。'),
+      m('t', 'raise', '調高（及物）', '命題教授陷阱', "The landlord has decided to ------- the office rent by five percent starting in January.", ['raise', 'rise', 'arise', 'arouse'], 0, '空格後面有受詞 the office rent。哪一個字後面「需要」接東西？', 'raise 是及物動詞（raise＋東西）；rise 是自己上升，例如 Prices rise。'),
+      m('t', 'principal', '主要的', '命題教授陷阱', "Cost reduction was the ------- reason for moving the factory overseas.", ['principle', 'practical', 'principal', 'particular'], 2, '這格修飾 reason，需要形容詞「主要的」。另一個長得像的字只能當名詞。', 'principal 是「主要的」；principle 是名詞「原則」。the principal reason 是主要原因。'),
+      m('t', 'personnel', '人事、全體員工', '命題教授陷阱', "Please contact the ------- department if you have questions about your employment contract.", ['personal', 'personable', 'personnel', 'personality'], 2, '跟僱用合約有關的部門。兩個 n、重音在最後的那個字，指的是「一群員工」。', 'personnel 是「人事、員工」；personal 是「個人的」。personnel department 就是人事部。')
+    ];
+    return this._bank;
+  }
+  find(w) { return this.bank().find((x) => x.w === w); }
+
+  /* ---------- 狀態 ---------- */
+  fresh() {
+    return {
+      screen: 'home', day: 0, level: 3, xp: 240, streak: 6, lastPlayed: -1, memorized: 32,
+      completed: 6, bossCleared: false, weekXp: 1260, runs: 0, bossRuns: 0,
+      forget: [
+        { w: 'reimburse', due: 0, missed: -3 },
+        { w: 'invoice', due: 0, missed: -3 },
+        { w: 'itinerary', due: 1, missed: -2 },
+        { w: 'deadline', due: 3, missed: -1 }
+      ],
+      settings: false, toast: '', q: null, res: null, bossEnd: null, match: null, b: null, bEnd: null
+    };
+  }
+  saveKeys() { return ['day', 'level', 'xp', 'streak', 'lastPlayed', 'memorized', 'completed', 'bossCleared', 'weekXp', 'runs', 'bossRuns', 'forget']; }
+  loadState() {
+    const s = this.fresh();
+    try {
+      const raw = window.localStorage.getItem('toeicQuest.v1');
+      if (raw) {
+        const p = JSON.parse(raw);
+        this.saveKeys().forEach((k) => { if (p && p[k] !== undefined && p[k] !== null) s[k] = p[k]; });
+        if (!Array.isArray(s.forget)) s.forget = this.fresh().forget;
+      }
+    } catch (e) { /* 儲存不可用時照常運作 */ }
+    return s;
+  }
+  componentDidUpdate() {
+    try {
+      const o = {};
+      this.saveKeys().forEach((k) => { o[k] = this.state[k]; });
+      window.localStorage.setItem('toeicQuest.v1', JSON.stringify(o));
+    } catch (e) { /* 忽略 */ }
+  }
+  componentWillUnmount() { this.clearTimers(); }
+
+  later(fn, ms) { const id = setTimeout(fn, ms); this.timers.push(id); return id; }
+  clearTimers() {
+    this.timers.forEach((id) => clearTimeout(id));
+    this.timers = [];
+    if (this.ticker) { clearInterval(this.ticker); this.ticker = null; }
+  }
+  gain(s, n) {
+    let xp = s.xp + n, level = s.level;
+    while (xp >= 300) { xp -= 300; level += 1; }
+    return { xp, level, weekXp: s.weekXp + n };
+  }
+  pin(forget, w, day) {
+    return forget.filter((f) => f.w !== w).concat([{ w, due: day + 1, missed: day }]);
+  }
+  dateOf(day) {
+    const d = new Date(2026, 10, 15 + day);
+    return (d.getMonth() + 1) + '/' + d.getDate() + '（' + '日一二三四五六'.charAt(d.getDay()) + '）';
+  }
+
+  /* ---------- 導覽 ---------- */
+  goHome() { this.clearTimers(); this.setState({ screen: 'home', q: null, b: null, match: null, settings: false }); }
+  toggleSettings() { this.setState({ settings: !this.state.settings }); }
+  resetDemo() {
+    this.clearTimers();
+    try { window.localStorage.removeItem('toeicQuest.v1'); } catch (e) { /* 忽略 */ }
+    const s = this.fresh();
+    s.toast = '已重設 demo：小陳 Lv.3、連續 6 天、預設快忘清單。';
+    this.setState(s);
+    this.later(() => this.setState({ toast: '' }), 4000);
+  }
+  nextDay() {
+    this.clearTimers();
+    const s = this.state, day = s.day + 1;
+    const broke = s.lastPlayed < s.day;
+    const dueWords = s.forget.filter((f) => f.due <= day).map((f) => f.w);
+    let toast = '⏭ 新的一天 ' + this.dateOf(day) + '。';
+    toast += dueWords.length ? '到期的字：' + dueWords.join('、') + '，會優先出現在今日關卡。' : '今天沒有到期的快忘字。';
+    toast += broke ? '昨天沒有闖關，連續天數歸零。' : '完成今日關卡，連續天數就會 +1。';
+    this.setState({ day, streak: broke ? 0 : s.streak, screen: 'home', settings: false, q: null, b: null, match: null, toast });
+    this.later(() => this.setState({ toast: '' }), 6000);
+  }
+
+  /* ---------- 今日關卡 ---------- */
+  startDaily() {
+    this.clearTimers();
+    const s = this.state, bank = this.bank();
+    const list = [], inList = {}, inForget = {};
+    s.forget.forEach((f) => { inForget[f.w] = 1; });
+    s.forget.filter((f) => f.due <= s.day).slice(0, 2).forEach((f) => {
+      const item = this.find(f.w);
+      if (item) { list.push(Object.assign({}, item, { retry: Math.max(1, s.day - f.missed) })); inList[f.w] = 1; }
+    });
+    const iv = bank.filter((x) => x.kind === 'i');
+    let ivq = iv[(s.day + s.runs) % iv.length];
+    if (inList[ivq.w]) ivq = iv.find((x) => !inList[x.w]) || ivq;
+    inList[ivq.w] = 1;
+    const gen = bank.filter((x) => x.kind === 'g');
+    let i = (s.day * 3 + s.runs * 2) % gen.length, guard = 0;
+    while (list.length < 4 && guard < gen.length) {
+      const g = gen[i % gen.length]; i += 1; guard += 1;
+      if (!inList[g.w] && !inForget[g.w]) { list.push(g); inList[g.w] = 1; }
+    }
+    guard = 0;
+    while (list.length < 4 && guard < gen.length) {
+      const g = gen[i % gen.length]; i += 1; guard += 1;
+      if (!inList[g.w]) { list.push(g); inList[g.w] = 1; }
+    }
+    list.splice(Math.min(3, list.length), 0, ivq);
+    this.setState({ screen: 'quiz', settings: false, toast: '', q: this.newQuiz('daily', list) });
+  }
+  startBoss() {
+    this.clearTimers();
+    const s = this.state, traps = this.bank().filter((x) => x.kind === 't');
+    const off = (s.bossRuns * 3) % traps.length;
+    const list = [0, 1, 2].map((k) => traps[(off + k) % traps.length]);
+    this.setState({ screen: 'quiz', settings: false, toast: '', bossRuns: s.bossRuns + 1, q: this.newQuiz('boss', list) });
+  }
+  newQuiz(mode, list) {
+    return { mode, list, idx: 0, phase: 'ask', wrong: [], ok: false, combo: 0, xp: 0, lastXp: 0, correct: 0, banner: 0, results: [], hp: 3 };
+  }
+  pick(i) {
+    const s = this.state, q = s.q;
+    if (!q || q.phase === 'done' || q.wrong.indexOf(i) >= 0) return;
+    const cur = q.list[q.idx], daily = q.mode === 'daily';
+    if (i === cur.a) {
+      const first = q.wrong.length === 0;
+      const combo = first ? q.combo + 1 : 0;
+      const gained = daily ? (first ? Math.round(10 * (combo >= 2 ? 1.25 : 1)) : 5) : 0;
+      const isRetry = cur.retry != null;
+      const patch = this.gain(s, gained);
+      if (daily && first && isRetry) {
+        patch.forget = s.forget.filter((f) => f.w !== cur.w);
+        patch.memorized = s.memorized + 1;
+      }
+      const banner = daily && combo >= 2 ? combo : 0;
+      patch.q = Object.assign({}, q, {
+        phase: 'done', ok: true, combo, xp: q.xp + gained, lastXp: gained, correct: q.correct + 1, banner,
+        hp: daily ? q.hp : Math.max(0, q.hp - 1),
+        results: q.results.concat([{ w: cur.w, zh: cur.zh, ok: true, first, retry: isRetry }])
+      });
+      this.setState(patch);
+      if (banner) this.later(() => { const qq = this.state.q; if (qq) this.setState({ q: Object.assign({}, qq, { banner: 0 }) }); }, 1900);
+    } else {
+      const forget = this.pin(s.forget, cur.w, s.day);
+      if (q.wrong.length === 0) {
+        this.setState({ forget, q: Object.assign({}, q, { phase: 'hint', wrong: [i], combo: 0, banner: 0 }) });
+      } else {
+        this.setState({ forget, q: Object.assign({}, q, {
+          phase: 'done', ok: false, wrong: q.wrong.concat([i]), combo: 0, lastXp: 0, banner: 0,
+          results: q.results.concat([{ w: cur.w, zh: cur.zh, ok: false, first: false, retry: cur.retry != null }])
+        }) });
+      }
+    }
+  }
+  nextQ() {
+    const s = this.state, q = s.q;
+    if (!q || q.phase !== 'done') return;
+    if (q.idx < q.list.length - 1) {
+      this.setState({ q: Object.assign({}, q, { idx: q.idx + 1, phase: 'ask', wrong: [], ok: false, banner: 0, lastXp: 0 }) });
+      return;
+    }
+    if (q.mode === 'daily') {
+      const up = s.lastPlayed < s.day;
+      this.setState({
+        screen: 'result', q: null, runs: s.runs + 1,
+        streak: up ? s.streak + 1 : s.streak, lastPlayed: s.day,
+        completed: up ? Math.min(9, s.completed + 1) : s.completed,
+        res: {
+          correct: q.correct, total: q.list.length, xp: q.xp, streakUp: up,
+          revenge: q.results.filter((r) => r.ok && r.first && r.retry),
+          pinned: q.results.filter((r) => !r.first)
+        }
+      });
+    } else {
+      const win = q.hp === 0, firstClear = win && !s.bossCleared;
+      const patch = firstClear ? this.gain(s, 50) : {};
+      patch.screen = 'bossEnd'; patch.q = null;
+      patch.bossCleared = s.bossCleared || win;
+      patch.bossEnd = { win, hp: q.hp, firstClear };
+      this.setState(patch);
+    }
+  }
+
+  /* ---------- 雙人對戰 ---------- */
+  startMatch() {
+    this.clearTimers();
+    this.setState({ screen: 'match', match: 'searching', settings: false, toast: '', q: null, b: null });
+    this.later(() => this.setState({ match: 'found' }), 2000);
+    this.later(() => this.startBattle(), 4000);
+  }
+  roundSeed() { return { t: 10, picked: null, pickOk: false, oppDone: false, oppOk: false, ended: false, banner: false, myGain: 0, oppGain: 0, oppAt: 2 + Math.random() * 4, oppWill: Math.random() < 0.7 }; }
+  startBattle() {
+    const s = this.state;
+    const mine = s.forget.slice().sort((a, b) => a.due - b.due).map((f) => this.find(f.w)).filter(Boolean).slice(0, 3)
+      .map((x) => Object.assign({}, x, { src: 'me' }));
+    const his = ['postpone', 'warranty', 'negotiate', 'agenda', 'shipment', 'approve', 'renovation', 'attendee']
+      .filter((w) => !mine.some((x) => x.w === w)).map((w) => Object.assign({}, this.find(w), { src: 'opp' }));
+    const list = [];
+    let a = 0, c = 0;
+    while (list.length < 5) {
+      if (list.length % 2 === 0 && a < mine.length) { list.push(mine[a]); a += 1; }
+      else { list.push(his[c]); c += 1; }
+    }
+    this.setState({ screen: 'battle', match: null, b: Object.assign({ list, idx: 0, my: 0, opp: 0, myCombo: 0, oppCombo: 0, log: [] }, this.roundSeed()) });
+    if (this.ticker) clearInterval(this.ticker);
+    this.ticker = setInterval(() => this.tick(), 100);
+  }
+  tick() {
+    const b = this.state.b;
+    if (!b || b.ended || this.state.screen !== 'battle') return;
+    const nb = Object.assign({}, b, { t: Math.max(0, b.t - 0.1) });
+    if (!nb.oppDone && 10 - nb.t >= nb.oppAt) {
+      nb.oppDone = true; nb.oppOk = nb.oppWill;
+      if (nb.oppOk) {
+        nb.oppCombo = b.oppCombo + 1;
+        nb.oppGain = Math.round(Math.ceil(nb.t) * 10 * (nb.oppCombo >= 2 ? 1.25 : 1));
+        nb.opp = b.opp + nb.oppGain;
+      } else { nb.oppCombo = 0; }
+    }
+    if ((nb.picked !== null && nb.oppDone) || nb.t <= 0) {
+      nb.ended = true;
+      if (nb.picked === null) {
+        const cur = nb.list[nb.idx];
+        nb.myCombo = 0;
+        nb.log = nb.log.concat([{ w: cur.w, zh: cur.zh, src: cur.src, ok: false }]);
+      }
+      this.later(() => this.nextRound(), 1900);
+    }
+    this.setState({ b: nb });
+  }
+  pickB(i) {
+    const b = this.state.b;
+    if (!b || b.ended || b.picked !== null) return;
+    const cur = b.list[b.idx], ok = i === cur.a;
+    const myCombo = ok ? b.myCombo + 1 : 0;
+    const myGain = ok ? Math.round(Math.ceil(b.t) * 10 * (myCombo >= 2 ? 1.25 : 1)) : 0;
+    const nb = Object.assign({}, b, {
+      picked: i, pickOk: ok, myCombo, myGain, my: b.my + myGain, banner: ok && myCombo >= 2,
+      log: b.log.concat([{ w: cur.w, zh: cur.zh, src: cur.src, ok }])
+    });
+    if (nb.oppDone) { nb.ended = true; this.later(() => this.nextRound(), 1900); }
+    this.setState({ b: nb });
+  }
+  nextRound() {
+    const s = this.state, b = s.b;
+    if (!b || s.screen !== 'battle') return;
+    if (b.idx < b.list.length - 1) {
+      this.setState({ b: Object.assign({}, b, { idx: b.idx + 1 }, this.roundSeed()) });
+      return;
+    }
+    this.clearTimers();
+    const win = b.my > b.opp, tie = b.my === b.opp;
+    const reward = win ? 30 : (tie ? 20 : 10);
+    const patch = this.gain(s, reward);
+    patch.screen = 'battleEnd'; patch.b = null;
+    patch.bEnd = { win, tie, my: b.my, opp: b.opp, reward, words: b.log.filter((r) => r.src === 'me') };
+    this.setState(patch);
+  }
+
+  /* ---------- 輸出給版面 ---------- */
+  renderVals() {
+    const s = this.state, sc = s.screen;
+    const todayDone = s.lastPlayed >= s.day;
+    const dueLabel = (d) => (d <= s.day ? '今天' : (d - s.day === 1 ? '明天' : (d - s.day) + ' 天後'));
+
+    const nodes = [];
+    for (let n = 1; n <= 10; n += 1) {
+      if (n === 10) {
+        nodes.push({ icon: s.bossCleared ? '👑' : '🎓', cls: 'node boss' + (s.bossCleared ? ' cleared' : ''), cap: s.bossCleared ? '已通關' : '🔒 Boss', off: false, go: () => this.startBoss(), aria: '第 10 關：命題教授 Boss 關' });
+      } else if (n <= s.completed) {
+        nodes.push({ icon: '✓', cls: 'node done', cap: '', off: true, go: null, aria: '第 ' + n + ' 關：已完成' });
+      } else if (n === s.completed + 1 && !todayDone) {
+        nodes.push({ icon: String(n), cls: 'node today', cap: '今日', off: false, go: () => this.startDaily(), aria: '第 ' + n + ' 關：今日關卡' });
+      } else {
+        nodes.push({ icon: '🔒', cls: 'node', cap: (n === s.completed + 1) ? '明天' : '', off: true, go: null, aria: '第 ' + n + ' 關：尚未開放' });
+      }
+    }
+    const dots = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+    const regions = ['會議與行程', '人事與招募', '客戶與行銷', '出差與旅遊'].map((name, i) => ({ name, no: i + 2, dots }));
+    const forgetRows = s.forget.slice().sort((a, b) => a.due - b.due).map((f) => {
+      const it = this.find(f.w) || {};
+      return { w: f.w, zh: it.zh || '', when: dueLabel(f.due), cls: f.due <= s.day ? 'chip gold' : 'chip' };
+    });
+    const dueCount = s.forget.filter((f) => f.due <= s.day).length;
+
+    /* 題目頁 */
+    let qv = { isDaily: false, isBoss: false, title: '', xpGained: 0, progPct: '0%', hpCells: [], tag: '', hasRetry: false, retryText: '', hasCtx: false, ctx: '', text: '', opts: [], showHint: false, hint: '', word: '', showOk: false, okText: '', exp: '', showPin: false, showBad: false, answer: '', done: false, nextLabel: '', banner: false, bannerText: '' };
+    if (sc === 'quiz' && s.q) {
+      const q = s.q, cur = q.list[q.idx], done = q.phase === 'done', daily = q.mode === 'daily';
+      const last = q.idx === q.list.length - 1;
+      const tagIcon = { 'Email': '✉️', '公告': '📢', '會議': '🗓️', '面試官挑戰': '💼', '命題教授陷阱': '🎓' }[cur.tag] || '';
+      qv = {
+        isDaily: daily, isBoss: !daily,
+        title: daily ? '第 ' + (q.idx + 1) + ' / ' + q.list.length + ' 題' : '陷阱題 ' + (q.idx + 1) + ' / ' + q.list.length,
+        xpGained: q.xp,
+        progPct: Math.round(((q.idx + (done ? 1 : 0)) / q.list.length) * 100) + '%',
+        hpCells: [0, 1, 2].map((k) => ({ cls: 'hp' + (k < q.hp ? ' full' : '') })),
+        tag: tagIcon + ' ' + cur.tag,
+        hasRetry: cur.retry != null,
+        retryText: cur.retry === 1 ? '🔁 昨天答錯' : '🔁 ' + cur.retry + ' 天前答錯',
+        hasCtx: !!cur.ctx, ctx: cur.ctx, text: cur.q,
+        opts: cur.opts.map((t, i) => {
+          let cls = 'opt', off = done;
+          if (done && i === cur.a) cls += ' ok';
+          else if (q.wrong.indexOf(i) >= 0) { cls += ' bad'; off = true; }
+          else if (done) cls += ' dim';
+          return { t, letter: 'ABCD'.charAt(i), cls, off, pick: () => this.pick(i) };
+        }),
+        showHint: q.phase === 'hint', hint: cur.hint, word: cur.w,
+        showOk: done && q.ok,
+        okText: daily
+          ? (q.wrong.length ? '提示後答對！+' + q.lastXp + ' 經驗值' : (q.combo >= 2 ? '答對了！+' + q.lastXp + ' 經驗值（Combo × 1.25）' : '答對了！+' + q.lastXp + ' 經驗值'))
+          : '命中！命題教授 −1 格血',
+        exp: cur.exp,
+        showPin: done && q.ok && q.wrong.length > 0,
+        showBad: done && !q.ok, answer: cur.opts[cur.a],
+        done,
+        nextLabel: last ? (daily ? '看結算 →' : '看結果 →') : '下一題 →',
+        banner: q.banner >= 2,
+        bannerText: '連續答對 ' + q.banner + ' 題！經驗值 × 1.25'
+      };
+    }
+
+    /* 結算 */
+    const res = s.res || { correct: 0, total: 5, xp: 0, streakUp: false, revenge: [], pinned: [] };
+    const rv = {
+      score: res.correct + ' / ' + res.total, xp: res.xp, streak: s.streak,
+      streakNote: res.streakUp ? '連續天數 +1！' : '今天已計入',
+      revenge: res.revenge, noRevenge: res.revenge.length === 0,
+      pinned: res.pinned, noPinned: res.pinned.length === 0
+    };
+    const board = [
+      { name: '你（小陳）', icon: '🧑', xp: s.weekXp, me: true },
+      { name: '阿明', icon: '😎', xp: 1300, me: false },
+      { name: '小華', icon: '🤓', xp: 1105, me: false }
+    ].sort((a, b) => b.xp - a.xp).map((p, i) => ({ rank: ['🥇', '🥈', '🥉'][i], name: p.name, icon: p.icon, xp: p.xp + ' XP', cls: 'row' + (p.me ? ' me' : '') }));
+
+    /* Boss 結果 */
+    const bossEnd = s.bossEnd || { win: false, hp: 3, firstClear: false };
+    const be = { win: sc === 'bossEnd' && bossEnd.win, lose: sc === 'bossEnd' && !bossEnd.win, hp: bossEnd.hp, rewardText: bossEnd.firstClear ? '首次通關獎勵 +50 經驗值' : '徽章已收藏（首次通關才有經驗值獎勵）' };
+
+    /* 對戰 */
+    let bv = { meStatus: '', oppStatus: '', deg: '360deg', secs: 10, my: 0, opp: 0, myPct: '0%', oppPct: '0%', round: '', src: '', text: '', opts: [], banner: false, bannerText: '' };
+    if (sc === 'battle' && s.b) {
+      const b = s.b, cur = b.list[b.idx], reveal = b.picked !== null || b.ended;
+      bv = {
+        meStatus: b.picked === null ? (b.ended ? '逾時 +0' : '作答中…') : (b.pickOk ? '答對 +' + b.myGain : '答錯 +0'),
+        oppStatus: !b.oppDone ? '思考中…' : (reveal ? (b.oppOk ? '答對 +' + b.oppGain : '答錯 +0') : '已作答 ✓'),
+        deg: Math.round((b.t / 10) * 360) + 'deg',
+        secs: Math.ceil(b.t),
+        my: b.my, opp: b.opp,
+        myPct: Math.min(100, Math.round(b.my / 6)) + '%',
+        oppPct: Math.min(100, Math.round(b.opp / 6)) + '%',
+        round: '第 ' + (b.idx + 1) + ' / ' + b.list.length + ' 題',
+        src: cur.src === 'me' ? '出自你的快忘清單' : '出自阿明的快忘清單',
+        text: cur.q,
+        opts: cur.opts.map((t, i) => {
+          let cls = 'opt';
+          if (reveal && i === cur.a) cls += ' ok';
+          else if (reveal && i === b.picked) cls += ' bad';
+          else if (reveal) cls += ' dim';
+          return { t, cls, off: reveal, pick: () => this.pickB(i) };
+        }),
+        banner: b.banner,
+        bannerText: '連續答對 ' + b.myCombo + ' 題　獎金 × 1.25'
+      };
+    }
+    const bEnd = s.bEnd || { win: false, tie: false, my: 0, opp: 0, reward: 0, words: [] };
+    const ev = {
+      title: bEnd.win ? '🏆 你贏了！' : (bEnd.tie ? '🤝 平手！' : '😵 惜敗，再接再厲'),
+      my: bEnd.my, opp: bEnd.opp,
+      xpText: (bEnd.win ? '勝利獎勵' : '參戰獎勵') + ' +' + bEnd.reward + ' 經驗值',
+      words: bEnd.words.map((r) => ({ w: r.w, zh: r.zh, mark: r.ok ? '✓ 這次答對' : '✗ 還要再練', cls: 'mark ' + (r.ok ? 'ok' : 'bad') })),
+      noWords: bEnd.words.length === 0
+    };
+
+    const titles = { home: '多益打怪 TOEIC Quest', quiz: (s.q && s.q.mode === 'boss') ? 'Boss 關：命題教授' : '今日關卡', result: '關卡結算', bossEnd: 'Boss 關結果', match: '雙人對戰', battle: '雙人對戰', battleEnd: '對戰結果' };
+
+    return {
+      topTitle: titles[sc] || titles.home,
+      notHome: sc !== 'home',
+      isHome: sc === 'home', isQuiz: sc === 'quiz' && !!s.q, isResult: sc === 'result', isBossEnd: sc === 'bossEnd',
+      isMatch: sc === 'match', isBattle: sc === 'battle' && !!s.b, isBattleEnd: sc === 'battleEnd',
+      settingsOpen: s.settings, dateText: this.dateOf(s.day),
+      hasToast: !!s.toast, toast: s.toast,
+      level: s.level, xp: s.xp, xpPct: Math.round((s.xp / 300) * 100) + '%',
+      streak: s.streak, memorized: s.memorized,
+      region1Status: s.bossCleared ? '已通關' : '進行中 ' + s.completed + ' / 10',
+      nodes, regions, forgetRows, forgetEmpty: forgetRows.length === 0,
+      dailyNote: todayDone ? '今天已完成，可再練一次' : (dueCount ? dueCount + ' 個快忘字到期' : '5 題・約 3 分鐘'),
+      qv, rv, board, be, bv, ev,
+      mv: { searching: s.match === 'searching', found: s.match === 'found' },
+      goHome: () => this.goHome(),
+      toggleSettings: () => this.toggleSettings(),
+      nextDay: () => this.nextDay(),
+      resetDemo: () => this.resetDemo(),
+      startDaily: () => this.startDaily(),
+      startBoss: () => this.startBoss(),
+      startMatch: () => this.startMatch(),
+      nextQ: () => this.nextQ()
+    };
+  }
+}
+</script>
+
+
+</body></html>

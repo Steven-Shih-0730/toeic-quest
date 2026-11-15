@@ -1,0 +1,63 @@
+/* 全域樣式與色彩變數（配色沿用 reference/demo-source.html） */
+:root {
+  color-scheme: dark;
+  --bg: #0f1b3d;
+  --bg-deep: #0b1530;
+  --outside: #070e22;
+  --card: #1b2a57;
+  --card-inner: #16224a;
+  --card-locked: #131f45;
+  --line: #22326b;
+  --line-strong: #35488f;
+  --chip: #26397a;
+  --text: #f2f5ff;
+  --text-muted: #c3cdf0;
+  --text-dim: #a9b6e0;
+  --gold: #ffc93c;
+  --gold-light: #fff1c2;
+  --gold-text: #3a2a00;
+  --gold-soft: #ffe08a;
+  --green: #2ecc71;
+  --green-dark: #1b8f4d;
+  --green-text: #06281a;
+  --blue: #5b8cff;
+  --blue-text: #061233;
+  --red: #ff5a5f;
+  --red-soft: #ff8a8e;
+  --purple: #3a1f5e;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  background: var(--outside);
+}
+
+body {
+  color: var(--text);
+  font-family: 'Noto Sans TC', system-ui, -apple-system, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button {
+  font-family: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+button:disabled { cursor: default; }
+button:focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01s !important;
+  }
+}

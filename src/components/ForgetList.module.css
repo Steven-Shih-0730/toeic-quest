@@ -1,0 +1,45 @@
+.card {
+  padding: 14px;
+  border-radius: 18px;
+  background: var(--card);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.heading { margin: 0; font-size: 16px; font-weight: 900; }
+.sub { font-size: 12px; color: var(--text-muted); }
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: var(--card-inner);
+}
+
+.word { flex: 1; min-width: 0; }
+.en { font-weight: 700; font-size: 16px; }
+.zh { font-size: 12px; color: var(--text-muted); }
+
+.chip,
+.chipGold {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.chip { background: var(--chip); color: #dfe6ff; }
+.chipGold { background: var(--gold); color: var(--gold-text); }
+
+.empty {
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--card-inner);
+  color: var(--text-muted);
+  font-size: 14px;
+  text-align: center;
+}

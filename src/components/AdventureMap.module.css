@@ -1,0 +1,98 @@
+.wrap { display: flex; flex-direction: column; gap: 10px; }
+.heading { margin: 0; font-size: 16px; font-weight: 900; }
+
+.activeZone {
+  padding: 14px 12px;
+  border-radius: 18px;
+  background: var(--card);
+  border: 2px solid var(--blue);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.zoneHead { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.zoneName { font-weight: 900; font-size: 15px; }
+
+.chipGold {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  background: var(--gold);
+  color: var(--gold-text);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px 4px;
+}
+
+.cell { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+
+/* 節點四種狀態：done 已完成、today 今日、locked 上鎖、boss */
+.node {
+  width: 52px;
+  max-width: 100%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 3px solid var(--line-strong);
+  background: var(--card-inner);
+  color: var(--text-dim);
+  font-size: 18px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.done { background: var(--green); border-color: var(--green); color: var(--green-text); }
+
+.today {
+  background: var(--gold);
+  border-color: var(--gold-light);
+  color: var(--gold-text);
+  animation: blink 1.1s ease-in-out infinite;
+}
+
+.locked { font-size: 16px; }
+
+.boss { background: var(--purple); border-color: var(--gold); color: #fff; font-size: 22px; }
+.boss:disabled { opacity: 0.75; }
+.cleared { background: var(--gold); border-color: var(--gold-light); opacity: 1; }
+
+.caption { font-size: 11px; color: var(--text-muted); height: 16px; white-space: nowrap; }
+
+.lockedZone {
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: var(--card-locked);
+  border: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.lockedHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-dim);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.soon { font-size: 12px; font-weight: 400; white-space: nowrap; }
+
+.dots { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 6px; }
+.dot { height: 10px; border-radius: 999px; background: var(--chip); }
+
+@keyframes blink {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 201, 60, 0.85); transform: scale(1); }
+  50% { box-shadow: 0 0 0 9px rgba(255, 201, 60, 0); transform: scale(1.08); }
+}

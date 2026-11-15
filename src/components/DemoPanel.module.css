@@ -1,0 +1,47 @@
+.panel {
+  position: absolute;
+  top: 62px;
+  right: 10px;
+  width: 250px;
+  max-width: calc(100% - 20px);
+  padding: 14px;
+  border-radius: 16px;
+  background: var(--card);
+  border: 2px solid var(--blue);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  animation: rise 0.35s ease both;
+}
+
+.heading { font-weight: 900; font-size: 15px; }
+.date { font-size: 13px; color: var(--text-muted); }
+.note { font-size: 11px; color: var(--text-dim); text-align: center; }
+
+.primary,
+.danger,
+.secondary {
+  height: 46px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.primary { border: none; background: var(--blue); color: var(--blue-text); }
+.danger { border: 1px solid var(--red-soft); background: #2a1f3f; color: #ffd5d6; }
+.secondary { border: 1px solid var(--gold); background: #2a1a4a; color: var(--gold-soft); }
+
+.close {
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid var(--line-strong);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}

@@ -1,0 +1,257 @@
+# 多益打怪 TOEIC Quest：專案說明
+
+> 給 Claude Code 讀的專案規格。每次開工前請先讀完這份文件，並以它為準；規格要改時，先更新這份文件再改程式。
+
+## 1. 專案概述
+
+TOEIC Quest 是給「準備多益的大學生」用的手機網頁 App。它用 AI 出的情境題、間隔重複和遊戲化，解決「單字背了又忘、練習很無聊、撐不久」的問題。
+
+- 一句話定位：把你答錯的題目、快忘的單字，變成每天 5 分鐘的闖關遊戲，並在你快忘記的時候自動出現。
+- 目標使用者：大三的小陳，畢業或求職需要 650 分，目前約 500 分，只有零碎時間。
+- 出處：2026/11/15「AI 時代青年實戰工作坊」提案。
+
+## 2. 目前進度
+
+- [x] 提案與說明文件
+- [x] 可點擊的 demo（`reference/demo.html` 為打包檔；可讀原始碼在 `reference/demo-source.html`，只當作畫面與互動的參考）
+- [x] 階段 0：規格確認（demo 與規格的差異已整理進本文件）
+- [x] 階段 1：專案骨架與首頁
+- [ ] 階段 2：題庫、間隔重複邏輯與單元測試
+- [ ] 階段 3：今日關卡、提示機制、結算頁
+- [ ] 階段 4：Boss 關與對戰（機器人對手）
+- [ ] 階段 5：真人連線對戰（Supabase Realtime）
+- [ ] 階段 6：部署到 Vercel
+
+完成一個階段就把對應項目打勾。
+
+## 3. 技術棧
+
+| 項目 | 選擇 | 理由 |
+| --- | --- | --- |
+| 前端 | Vite + React + TypeScript | 元件化，方便拆畫面 |
+| 樣式 | CSS Modules（已定案，不換） | 可直接沿用 demo 的樣式與動畫 |
+| 狀態保存 | localStorage（包在 try/catch 裡） | 第一版不做登入 |
+| 即時連線 | Supabase Realtime（Broadcast + Presence） | 不用自己架伺服器，第一版不需要建資料表 |
+| 測試 | Vitest | 間隔重複與計分邏輯一定要有測試 |
+| 部署 | Vercel | |
+
+環境變數（放在 `.env.local`，不要 commit；`.gitignore` 已排除 `node_modules`、`dist`、`.env.local`）：
+
+```
+VITE_SUPABASE_URL=
+VITE_SUPABASE_ANON_KEY=
+```
+
+## 4. 目錄結構
+
+```
+reference/demo.html        # artifact 做好的 demo（打包檔），不直接修改
+reference/demo-source.html # demo 解開後的原始碼，開發時以這份為參考
+src/
+  data/questions.ts        # 題庫
+  data/seed.ts             # demo 用初始假資料
+  lib/clock.ts             # today() 與「模擬隔天」的日期偏移
+  lib/srs.ts               # 間隔重複邏輯
+  lib/scoring.ts           # 經驗值、Combo、對戰計分
+  lib/storage.ts           # localStorage 讀寫
+  lib/battle/              # 對戰：機器人與連線
+  screens/                 # Home, Quest, Result, Boss, BossResult, BattleLobby, Battle, BattleResult
+  components/              # 共用元件：TopBar, DemoPanel, ProgressBar, ComboBanner, CoachHint, TimerRing ...
+tests/                     # Vitest
+```
+
+## 5. 資料模型
+
+```ts
+type Tag = 'email' | 'notice' | 'meeting' | 'interviewer' | 'professor';
+
+interface Question {
+  id: string;
+  word: string;          // 目標單字，例如 "reimburse"
+  zh: string;            // 中文字義，例如 "報銷、償還"（快忘清單、結算頁顯示用）
+  zone: number;          // 1~5，對應冒險地圖區域（本版只有第 1 區題目）
+  tag: Tag;
+  stem: string;          // 英文題目句，空格一律以 ____ 表示，畫面上顯示成底線
+  options: [string, string, string, string];
+  answer: 0 | 1 | 2 | 3;
+  hint: string;          // 費曼教練提示（第一次答錯時顯示，不能直接洩漏答案）
+  explanation: string;   // 白話解說（中文 1~2 句）
+  ctx?: string;          // 面試官情境文字（只有 interviewer 題有），顯示在 💼 情境框
+}
+
+interface WordProgress {
+  word: string;
+  wrongCount: number;
+  correctStreak: number; // 連續答對次數，答錯歸零
+  nextReview: string;    // ISO 日期 YYYY-MM-DD
+  mastered: boolean;
+  lastWrongAt?: string;
+}
+
+interface Player {
+  id: string;            // 隨機產生的匿名 id
+  name: string;          // 預設「小陳」，第一次進對戰大廳時設定
+  level: number;
+  xp: number;            // 目前等級內的經驗值，0~299
+  streakDays: number;
+  lastActiveDate: string; // 最後一次完成今日關卡的日期
+  clearedStages: number[]; // 已完成的關卡編號 1~50，第 N 區第 M 關 = (N-1)*10 + M
+  badges: string[];      // 已取得的獎章，例如 "報銷與財務達人"
+}
+```
+
+衍生資料（不另外存，由上面的資料即時算出）：
+
+- 快忘清單 ＝ `wrongCount > 0` 且 `mastered = false` 的 WordProgress。
+- 已記住字數 ＝ `mastered = true` 的 WordProgress 數量。
+
+區域名稱：第 1 區 報銷與財務、第 2 區 會議與行程、第 3 區 人事與招募、第 4 區 客戶與行銷、第 5 區 出差與旅遊。
+
+情境標籤顯示：`email` ✉️ Email、`notice` 📢 公告、`meeting` 🗓️ 會議、`interviewer` 💼 面試官挑戰、`professor` 🎓 命題教授陷阱。
+
+## 6. 核心規則
+
+### 6.1 間隔重複（`lib/srs.ts`）
+
+這是提案的核心，不可簡化。
+
+| 事件 | 結果 |
+| --- | --- |
+| 答錯 | `wrongCount + 1`，`correctStreak = 0`，`nextReview = 今天 + 1 天`，`lastWrongAt = 今天`（進入快忘清單） |
+| 答對，且 `correctStreak` 變成 1 | `nextReview = 今天 + 3 天` |
+| 答對，且 `correctStreak` 變成 2 | `nextReview = 今天 + 7 天` |
+| 答對，且 `correctStreak` 變成 3 | `mastered = true`，移出快忘清單 |
+
+- 第一次就答對的新字也要建立 WordProgress（`correctStreak = 1`，3 天後到期），但因為 `wrongCount = 0`，不會出現在快忘清單。
+- 今日關卡、Boss 關、對戰的作答都會更新 WordProgress。只有今日關卡「提示後才答對」算答錯。
+- 「今天到期」＝ `nextReview <= 今天` 且 `mastered = false`。
+- 日期一律透過 `lib/clock.ts` 的 `today()` 取得，方便測試與「模擬隔天」。`today()` ＝ 真實日期 ＋ 模擬偏移天數（偏移存在 localStorage）。
+
+### 6.2 今日關卡
+
+- 固定 5 題：
+  - 先放到期的複習字，最多 2 題。
+  - 第 4 題固定是 `interviewer` 情境題，且不能和到期題重複。
+  - 其餘從目前區域補新題。新題用完時的補題規則，在階段 3 實作前再決定。
+- 到期題標示「🔁 N 天前答錯」，N 由 `lastWrongAt` 算出，N = 1 時顯示「🔁 昨天答錯」。
+- 關卡推進：每天第一次完成今日關卡，就把目前區域下一個未完成的關卡（第 1～9 關）加進 `clearedStages`。同一天再玩只算練習，不推進。
+- 首頁按鈕副標題：今天已完成時顯示「今天已完成，可再練一次」；有到期字時顯示「N 個快忘字到期」；否則顯示「5 題・約 3 分鐘」。
+
+### 6.3 蘇格拉底式提示（只用在今日關卡）
+
+- 第一次答錯：不公布答案，費曼教練顯示 `hint`，讓玩家再選一次，並顯示「📌 已加入快忘清單，明天再考你」。
+- 第二次答錯：公布正解與 `explanation`，並記為答錯。
+- 第一次答錯、第二次答對：記為答錯（仍要進快忘清單），但給一半經驗值。
+
+### 6.4 經驗值與 Combo（`lib/scoring.ts`）
+
+- 一次答對 +10 XP；提示後答對 +5 XP。
+- 連續答對 2 題以上（只算一次就答對的）：Combo 加成 ×1.25，並顯示橫幅「連續答對 N 題！經驗值 × 1.25」。
+- 每 300 XP 升一級，多出來的經驗值帶到下一級。
+- 所有 XP 與對戰分數的小數一律用 `Math.round`（例如 10 × 1.25 = 12.5 → 13）。
+- 連續天數：
+  - 完成今日關卡時，若 `lastActiveDate` 不是今天，`streakDays + 1`，並把 `lastActiveDate` 設為今天（同一天只加一次）。
+  - 若 `lastActiveDate` 早於昨天，`streakDays` 歸零（在載入與「模擬隔天」時檢查）。
+- 其他獎勵：對戰勝 +30、平手 +20、落敗 +10 XP；Boss 首次通關 +50 XP。
+
+### 6.5 Boss 關
+
+- 每區第 10 關。該區第 1～9 關都完成後才解鎖。
+- 從該區 6 題 `professor` 陷阱題（易混淆字）中抽 5 題。
+- 命題教授 3 格血，玩家 3 條命：答對一題扣教授一格血，答錯一題扣自己一條命。先答對 3 題就獲勝，先答錯 3 題就失敗，當下立即結束。
+- Boss 關沒有提示，第一次答錯就算錯，直接公布正解與 `explanation`。Boss 關不給每題 XP。
+- 答錯的字照 6.1 寫進快忘清單。
+- 獲勝：該區第 10 關加入 `clearedStages`，取得該區獎章（第 1 區為「報銷與財務達人」）。首次通關才有 +50 XP，再次通關只顯示「徽章已收藏」。
+- 打倒後該區通關、解鎖下一區。本版只有第 1 區題庫，所以第 2～5 區一律顯示上鎖並標示「即將推出」。
+
+### 6.6 對戰計分（機器人與真人共用）
+
+- 5 題，每題 10 秒。
+- 答對得分 = `Math.round(ceil(剩餘秒數) × 10 × Combo 加成)`；答錯或超時 0 分。Combo 加成同 6.4（連續答對 2 題以上 ×1.25）。
+- 題目優先從雙方的快忘清單抽，並標示「出自你的快忘清單」或「出自○○的快忘清單」。
+- 雙方都作答或時間到後，公布答案 2 秒再進下一題。
+- 對戰中答錯或超時的字，也要照 6.1 寫進自己的快忘清單。
+- 畫面下方顯示計分說明：「得分＝剩餘秒數 × 10，連續答對再 × 1.25」。
+
+## 7. 畫面清單
+
+所有畫面共用頂部列：非首頁時左邊有「← 首頁」，中間是該頁標題，右邊是 ⚙️。
+
+| 畫面 | 標題 | 重點 |
+| --- | --- | --- |
+| Home | 多益打怪 TOEIC Quest | 名字、日期、等級、經驗值條（xp / 300）、連續天數、已記住字數、冒險地圖、今日關卡（含副標題）與雙人對戰按鈕、快忘清單（依到期日排序，標示今天／明天／N 天後；清單空時顯示「🎉 清單清空了！」） |
+| Quest | 今日關卡 | 題號與進度條、本關累計 XP、等級條、情境標籤、🔁 標示、面試官 💼 情境框、4 選項（A～D）、費曼教練提示、Combo 橫幅、「已加入快忘清單」提示、下一題／看結算按鈕 |
+| Result | 關卡結算 | 答對數、獲得 XP、連續天數（+1 時有彈跳動畫）、等級條、複仇成功、新加入快忘清單、寢室排行榜（假資料）、「返回首頁」與「👥 去對戰」按鈕 |
+| Boss | Boss 關：命題教授 | 教授頭像與 3 格血條、玩家 3 條命、教授台詞、陷阱題 |
+| BossResult | Boss 關結果 | 勝：🏅 通關畫面、獎章名稱、首次通關獎勵文字；敗：教授剩餘血量、「答錯的字已加入快忘清單」；都有「返回首頁」與「再戰教授」按鈕 |
+| BattleLobby | 雙人對戰 | 第一次進入時跳出暱稱輸入框；「快速配對（機器人）」（配對中… 2 秒 → 找到對手：阿明 Lv.4 → 2 秒後開始）、「取消配對」；「建立房間」、「輸入房號加入」在階段 5 實作 |
+| Battle | 雙人對戰 | 雙方頭像與狀態（作答中／思考中／已作答 ✓／答對 +N）、10 秒計時圈、左右直立分數條、題目來源標籤、選項對錯顏色、Combo 橫幅、計分說明文字 |
+| BattleResult | 對戰結果 | 勝負（🏆 你贏了／🤝 平手／😵 惜敗）、雙方分數、獲得 XP、本場出現的你的快忘字（✓ 這次答對／✗ 還要再練）、「返回首頁」與「再戰一場」按鈕 |
+
+冒險地圖：
+
+- 第 1 區卡片標示「進行中 N / 10」或「已通關」，10 個節點有四種狀態：
+  - 已完成：綠底 ✓
+  - 今日：黃色閃爍、標示「今日」，可點進今日關卡（今天已完成時改為上鎖，標示「明天」）
+  - 上鎖：🔒
+  - Boss：🎓（解鎖前標示「🔒 Boss」，通關後變 👑「已通關」）
+- 第 2～5 區顯示 🔒、區名與「即將推出」。
+
+展示用控制面板（右上角齒輪）：
+
+- 顯示目前 Demo 日期。
+- 按鈕：「⏭ 模擬隔天」、「🔄 重設 demo」、「🔓 解鎖本區 Boss」（把第 1～9 關設為完成）、「關閉」。
+- 「模擬隔天」後在首頁顯示 toast：新日期、今天到期的字，以及連續天數是否歸零。
+- 「重設 demo」後顯示 toast 說明已還原初始資料。
+- 正式版用環境變數 `VITE_SHOW_DEMO_PANEL` 隱藏。
+
+動畫：答對變綠＋彈跳、答錯變紅＋抖動、Combo 橫幅從左滑入、今日節點閃爍、卡片淡入上升；需尊重 `prefers-reduced-motion`。
+
+初始假資料（`seed.ts`，日期以重設當下的 `today()` 為基準）：小陳 Lv.3、本級 240 XP、連續 6 天、`lastActiveDate` = 昨天、`clearedStages` = [1..6]；快忘清單 reimburse、invoice（今天到期）、itinerary（明天到期）、deadline（3 天後到期）。初始沒有已記住的字（已記住 0 字）。
+
+## 8. 真人連線對戰設計（Supabase Realtime）
+
+第一版只用 Broadcast 和 Presence，不建資料表、不做登入。
+
+### 8.1 流程
+
+1. 房主按「建立房間」，產生 4 位數房號，加入 channel `battle:<房號>`。
+2. 對手輸入房號加入；用 Presence 確認人數，第 3 個人進來時顯示「房間已滿」並離開。
+3. 兩人都按「準備」後，各自用 `ready` 送出自己的快忘清單（到期單字）。
+4. 房主負責出題與控場（authoritative host）：選出 5 題後送 `start`。
+5. 每題由房主送 `question`（含開始時間），雙方作答後送 `answer`。
+6. 雙方都作答或時間到，房主送 `reveal`，2 秒後送下一題；5 題後送 `end`。
+7. 對手斷線（Presence leave）：顯示「對手已離線」，並提供「改跟機器人打完」。改打機器人時沿用目前題號與雙方分數；當題對手若未作答以 0 分計，機器人從下一題開始接手對手的位置。
+
+### 8.2 訊息格式
+
+```ts
+type BattleMsg =
+  | { type: 'ready';    playerId: string; name: string; level: number; dueWords: string[] }
+  | { type: 'start';    questionIds: string[]; sourceOf: Record<string, string> } // questionId → 出自誰的快忘清單
+  | { type: 'question'; index: number; startAt: number }                       // startAt：房主的 Date.now()
+  | { type: 'answer';   playerId: string; index: number; choice: number; remainingMs: number }
+  | { type: 'reveal';   index: number; scores: Record<string, number> }
+  | { type: 'end';      scores: Record<string, number> };
+```
+
+- 剩餘時間由作答者自己計算並回報（第一版可接受時鐘誤差）。
+- 分數以房主計算的 `reveal.scores` 為準，雙方畫面都顯示這個值。
+- 對戰中答錯的字，也要寫進各自的快忘清單。
+
+## 9. 開發規範
+
+- 介面文字一律繁體中文，題目為英文。
+- 題目一律原創，不得使用 ETS 官方題目或市售題本內容。
+- 手機直式優先（寬 390px 為基準），桌機置中顯示。
+- `lib/` 裡的邏輯不得依賴 React，必須有 Vitest 測試。
+- 每完成一個階段：執行 `npm run test` 與 `npm run build` 都要通過，更新第 2 節進度，再 commit。
+- 不確定規格時先問，不要自行假設；規格衝突時以本文件為準。
+
+## 10. 這一版不做的事
+
+- 帳號登入與雲端同步進度
+- 真正的 AI 即時出題（題庫先寫死）
+- 好友系統、真實排行榜（排行榜先用假資料，不放進資料模型）
+- 付費機制
+- 第 2～5 區的題庫（地圖上顯示「即將推出」）
