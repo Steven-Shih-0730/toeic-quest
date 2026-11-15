@@ -60,6 +60,21 @@ describe('題庫格式', () => {
     }
   });
 
+  it('提示不拼出只有正解才有的字根（例如 dead＋line、字尾 -ee）', () => {
+    const found: string[] = [];
+    for (const q of QUESTIONS) {
+      const stem = q.stem.toLowerCase();
+      const answer = q.options[q.answer].toLowerCase();
+      const others = q.options.filter((_, i) => i !== q.answer).map((o) => o.toLowerCase());
+      const tokens = q.hint.toLowerCase().match(/[a-z]{2,}/g) ?? [];
+      for (const t of tokens) {
+        if (stem.includes(t)) continue; // 題目句本來就看得到的字不算洩漏
+        if (answer.includes(t) && !others.some((o) => o.includes(t))) found.push(`${q.id}：${t}`);
+      }
+    }
+    expect(found).toEqual([]);
+  });
+
   it('每題 id、word 唯一，題目恰好一個 ____，正解選項就是目標字的變化形', () => {
     expect(new Set(QUESTIONS.map((q) => q.id)).size).toBe(QUESTIONS.length);
     expect(new Set(QUESTIONS.map((q) => q.word)).size).toBe(QUESTIONS.length);
