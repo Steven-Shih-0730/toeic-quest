@@ -15,9 +15,5 @@ export const ZONES: Zone[] = [
   { no: 5, name: '出差與旅遊', badge: '出差與旅遊達人', available: false },
 ];
 
-export const STAGES_PER_ZONE = 10;
-
-/** 第 zone 區第 stage 關的關卡編號 */
-export function stageId(zone: number, stage: number): number {
-  return (zone - 1) * STAGES_PER_ZONE + stage;
-}
+/** 本版玩家所在的區域 */
+export const CURRENT_ZONE = 1;

@@ -16,7 +16,7 @@ TOEIC Quest 是給「準備多益的大學生」用的手機網頁 App。它用 
 - [x] 可點擊的 demo（`reference/demo.html` 為打包檔；可讀原始碼在 `reference/demo-source.html`，只當作畫面與互動的參考）
 - [x] 階段 0：規格確認（demo 與規格的差異已整理進本文件）
 - [x] 階段 1：專案骨架與首頁
-- [ ] 階段 2：題庫、間隔重複邏輯與單元測試
+- [x] 階段 2：題庫、間隔重複邏輯與單元測試
 - [ ] 階段 3：今日關卡、提示機制、結算頁
 - [ ] 階段 4：Boss 關與對戰（機器人對手）
 - [ ] 階段 5：真人連線對戰（Supabase Realtime）
@@ -50,9 +50,11 @@ reference/demo-source.html # demo 解開後的原始碼，開發時以這份為�
 src/
   data/questions.ts        # 題庫
   data/seed.ts             # demo 用初始假資料
+  data/zones.ts            # 5 區名稱與獎章
   lib/clock.ts             # today() 與「模擬隔天」的日期偏移
   lib/srs.ts               # 間隔重複邏輯
-  lib/scoring.ts           # 經驗值、Combo、對戰計分
+  lib/scoring.ts           # 經驗值、Combo、連續天數、對戰計分
+  lib/stages.ts            # 關卡編號、推進與 Boss 解鎖
   lib/storage.ts           # localStorage 讀寫
   lib/battle/              # 對戰：機器人與連線
   screens/                 # Home, Quest, Result, Boss, BossResult, BattleLobby, Battle, BattleResult

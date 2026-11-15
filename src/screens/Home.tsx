@@ -4,14 +4,16 @@ import AdventureMap from '../components/AdventureMap';
 import ForgetList from '../components/ForgetList';
 import ProgressBar from '../components/ProgressBar';
 import { formatShortDate } from '../lib/clock';
+import { XP_PER_LEVEL } from '../lib/scoring';
 import { dueWords, masteredCount } from '../lib/srs';
 import type { GameState } from '../types';
-
-const XP_PER_LEVEL = 300; // CLAUDE.md 6.4；階段 2 會移到 lib/scoring.ts
 
 interface Props {
   game: GameState;
   todayIso: string;
+  /** 齒輪面板操作後的提示文字，空字串表示不顯示 */
+  toast: string;
+  toastKey: number;
   onNavigate: (screen: Screen) => void;
 }
 
@@ -22,11 +24,17 @@ function dailyNote(game: GameState, todayIso: string): string {
   return '5 題・約 3 分鐘';
 }
 
-export default function Home({ game, todayIso, onNavigate }: Props) {
+export default function Home({ game, todayIso, toast, toastKey, onNavigate }: Props) {
   const { player, progress } = game;
 
   return (
     <main className={styles.page}>
+      {toast && (
+        <div key={toastKey} className={styles.toast} role="status">
+          {toast}
+        </div>
+      )}
+
       <section className={styles.playerCard}>
         <div className={styles.playerRow}>
           <div className={styles.avatar} aria-hidden="true">🧑</div>

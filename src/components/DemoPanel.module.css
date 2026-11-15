@@ -17,7 +17,6 @@
 
 .heading { font-weight: 900; font-size: 15px; }
 .date { font-size: 13px; color: var(--text-muted); }
-.note { font-size: 11px; color: var(--text-dim); text-align: center; }
 
 .primary,
 .danger,
@@ -31,6 +30,7 @@
 .primary { border: none; background: var(--blue); color: var(--blue-text); }
 .danger { border: 1px solid var(--red-soft); background: #2a1f3f; color: #ffd5d6; }
 .secondary { border: 1px solid var(--gold); background: #2a1a4a; color: var(--gold-soft); }
+.secondary:disabled { opacity: 0.6; }
 
 .close {
   height: 44px;

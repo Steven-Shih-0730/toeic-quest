@@ -1,5 +1,6 @@
 import styles from './AdventureMap.module.css';
-import { STAGES_PER_ZONE, ZONES, stageId } from '../data/zones';
+import { CURRENT_ZONE, ZONES } from '../data/zones';
+import { BOSS_STAGE, STAGES_PER_ZONE, isBossUnlocked, isZoneCleared, nextNormalStage, stageId } from '../lib/stages';
 import type { Player } from '../types';
 
 interface Props {
@@ -21,16 +22,15 @@ interface MapNode {
   aria: string;
 }
 
-const ZONE = 1; // 本版只開放第 1 區
-const BOSS_STAGE = STAGES_PER_ZONE;
+const ZONE = CURRENT_ZONE;
 
-/** 依 CLAUDE.md 第 7 節「冒險地圖」算出第 1 區每個節點的狀態 */
+/** 依 CLAUDE.md 第 7 節「冒險地圖」算出目前區域每個節點的狀態 */
 function buildNodes(player: Player, todayIso: string): MapNode[] {
-  const cleared = new Set(player.clearedStages);
-  const isCleared = (m: number) => cleared.has(stageId(ZONE, m));
+  const cleared = player.clearedStages;
+  const isCleared = (m: number) => cleared.includes(stageId(ZONE, m));
   const todayDone = player.lastActiveDate === todayIso;
   const normalStages = Array.from({ length: BOSS_STAGE - 1 }, (_, i) => i + 1);
-  const next = normalStages.find((m) => !isCleared(m));
+  const next = nextNormalStage(cleared, ZONE);
 
   const nodes: MapNode[] = normalStages.map((m): MapNode => {
     if (isCleared(m)) {
@@ -49,8 +49,8 @@ function buildNodes(player: Player, todayIso: string): MapNode[] {
     };
   });
 
-  const bossCleared = isCleared(BOSS_STAGE);
-  const bossUnlocked = next === undefined;
+  const bossCleared = isZoneCleared(cleared, ZONE);
+  const bossUnlocked = isBossUnlocked(cleared, ZONE);
   let bossAria = '第 10 關：命題教授 Boss 關（完成第 1～9 關後解鎖）';
   if (bossCleared) bossAria = '第 10 關：命題教授 Boss 關（已通關）';
   else if (bossUnlocked) bossAria = '第 10 關：命題教授 Boss 關';
