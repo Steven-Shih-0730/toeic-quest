@@ -81,6 +81,13 @@ export default function Home({ game, todayIso, toast, toastKey, onStartDaily, on
       <AdventureMap player={player} onStartStage={onStartStage} onStartBoss={onStartBoss} />
 
       <ForgetList progress={progress} todayIso={todayIso} />
+
+      <footer className={styles.footer}>
+        Made by 施定宇 (Steven Shih)・
+        <a href="https://github.com/Steven-Shih-0730/toeic-quest" target="_blank" rel="noopener noreferrer">
+          GitHub
+        </a>
+      </footer>
     </main>
   );
 }
