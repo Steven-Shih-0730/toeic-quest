@@ -1,5 +1,17 @@
 # 多益打怪 TOEIC Quest
 
+[![toeic](https://img.shields.io/badge/topic-toeic-0969da)](https://github.com/topics/toeic)
+[![english-learning](https://img.shields.io/badge/topic-english--learning-0969da)](https://github.com/topics/english-learning)
+[![vocabulary](https://img.shields.io/badge/topic-vocabulary-0969da)](https://github.com/topics/vocabulary)
+[![spaced-repetition](https://img.shields.io/badge/topic-spaced--repetition-0969da)](https://github.com/topics/spaced-repetition)
+[![gamification](https://img.shields.io/badge/topic-gamification-0969da)](https://github.com/topics/gamification)
+[![pwa](https://img.shields.io/badge/topic-pwa-0969da)](https://github.com/topics/pwa)
+[![react](https://img.shields.io/badge/topic-react-0969da)](https://github.com/topics/react)
+[![typescript](https://img.shields.io/badge/topic-typescript-0969da)](https://github.com/topics/typescript)
+[![vite](https://img.shields.io/badge/topic-vite-0969da)](https://github.com/topics/vite)
+[![supabase](https://img.shields.io/badge/topic-supabase-0969da)](https://github.com/topics/supabase)
+[![vercel](https://img.shields.io/badge/topic-vercel-0969da)](https://github.com/topics/vercel)
+
 把你答錯的題目、快忘的單字，變成每天 5 分鐘的闖關遊戲，並在你快忘記的時候自動出現。
 
 **線上試玩：https://toeic-quest-swart.vercel.app**（用手機打開效果最好）
