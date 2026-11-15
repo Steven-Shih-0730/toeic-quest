@@ -29,7 +29,7 @@ TOEIC Quest 是給「準備多益的大學生」用的手機網頁 App。它用 
 部署資訊：
 
 - 正式網址：https://toeic-quest-swart.vercel.app（Vercel 專案 `toeic-quest`）
-- GitHub：https://github.com/Steven-Shih-0730/toeic-quest（已連上 Vercel：push 到 `master` 自動部署正式版，其他分支產生預覽版）
+- GitHub：https://github.com/Steven-Shih-0730/toeic-quest（公開，MIT 授權；已連上 Vercel：push 到 `master` 自動部署正式版，其他分支產生預覽版）
 - Supabase 專案：`toeic-quest`（東京，只用 Realtime，沒有資料表）
 - `VITE_SHOW_DEMO_PANEL=true`（正式版與預覽版都顯示齒輪，方便工作坊展示「模擬隔天」；要隱藏時在 Vercel 改成 `false`，再 push 一次或在 Vercel 後台按 Redeploy 才會生效）
 - 其他 Vercel 設定：GitHub 部署紀錄（`createDeployments`）已開啟，README 的部署狀態徽章靠它顯示
@@ -64,6 +64,7 @@ docs/                      # 安裝用 QR code（Android、iOS 各一張）
 當日報告/                  # 工作坊當日的簡報（toeic-quest-slides.html）
 README.md                  # 專案介紹、本機啟動、部署
 PROMPTS.md                 # 分階段開發用的提示詞
+LICENSE                    # MIT 授權（開源）
 src/
   types.ts                 # 共用型別（Question、WordProgress、Player 等）
   data/questions.ts        # 題庫
@@ -136,7 +137,14 @@ interface Player {
 - 已記住字數 ＝ `mastered = true` 的 WordProgress 數量。
 - 已開放的區域 ＝ 第 1 區，以及「前一區 Boss 已通關」的區域。
 
-題庫：100 題，5 區各 20 題（一般情境題 11、`interviewer` 3、`professor` 6），每區內容對應區域主題。目標單字全題庫不重複。
+題庫：100 題，5 區各 20 題（一般情境題 11、`interviewer` 3、`professor` 6），每區內容對應區域主題（第 1 區有 7 題是 demo 留下的通用商務題，例如 deadline、personnel，刻意不搬區）。目標單字全題庫不重複。
+
+寫 `hint` 的規則：
+
+- 從句子線索、情境或文法引導，不能寫出正解，也不能拼出只有正解才有的字根或片段（例如 dead＋line、字尾 -ee、「有兩個 n 的那個」）。
+- 字根、拼字的記法放在 `explanation`，以「記法：…」結尾。
+- `tests/seed.test.ts` 會自動檢查英文片段的洩漏；用中文描述拼法的洩漏測不到，要人工注意。
+- 100 題都已經用三角色會審檢查過一輪（PROMPTS.md 的「三角色檢查題庫品質」）。
 
 區域名稱：第 1 區 報銷與財務、第 2 區 會議與行程、第 3 區 人事與招募、第 4 區 客戶與行銷、第 5 區 出差與旅遊。
 
