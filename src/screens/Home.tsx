@@ -4,6 +4,7 @@ import AdventureMap from '../components/AdventureMap';
 import ForgetList from '../components/ForgetList';
 import InstallGuide from '../components/InstallGuide';
 import ProgressBar from '../components/ProgressBar';
+import Footer from '../components/Footer';
 import { formatShortDate } from '../lib/clock';
 import { XP_PER_LEVEL } from '../lib/scoring';
 import { dueWords, masteredCount } from '../lib/srs';
@@ -82,12 +83,7 @@ export default function Home({ game, todayIso, toast, toastKey, onStartDaily, on
 
       <ForgetList progress={progress} todayIso={todayIso} />
 
-      <footer className={styles.footer}>
-        Made by 施定宇 (Steven Shih)・
-        <a href="https://github.com/Steven-Shih-0730/toeic-quest" target="_blank" rel="noopener noreferrer">
-          GitHub
-        </a>
-      </footer>
+      <Footer />
     </main>
   );
 }

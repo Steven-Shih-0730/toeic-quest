@@ -86,7 +86,7 @@ src/
                            #   bot.ts（機器人）、realtime.ts（房間與連線對手）、supabaseClient.ts（Supabase 連線）
   screens/                 # Home, Quest, Result, Boss, BossResult, BattleLobby, RoomView, Battle, BattleResult
   components/              # 共用元件：TopBar, DemoPanel, AdventureMap, ForgetList, Leaderboard, InstallGuide,
-                           #   ProgressBar, ComboBanner, CoachHint, OptionButton, Stem, TimerRing
+                           #   ProgressBar, ComboBanner, CoachHint, OptionButton, Stem, TimerRing, Footer
 tests/                     # Vitest（13 個檔案）
 ```
 
@@ -252,9 +252,9 @@ interface Player {
 
 | 畫面 | 標題 | 重點 |
 | --- | --- | --- |
-| Home | 多益打怪 TOEIC Quest | 名字、日期、等級、經驗值條（xp / 300）、連續天數、已記住字數、冒險地圖、今日關卡（含副標題）與雙人對戰按鈕、快忘清單（依到期日排序，標示今天／明天／N 天後；清單空時顯示「🎉 清單清空了！」）、頁尾（「Made by 施定宇 (Steven Shih)」與 GitHub 原始碼連結，只在首頁顯示） |
+| Home | 多益打怪 TOEIC Quest | 名字、日期、等級、經驗值條（xp / 300）、連續天數、已記住字數、冒險地圖、今日關卡（含副標題）與雙人對戰按鈕、快忘清單（依到期日排序，標示今天／明天／N 天後；清單空時顯示「🎉 清單清空了！」）、作者頁尾（「Made by 施定宇 (Steven Shih)」與 GitHub 原始碼連結；只放在首頁與結算頁，答題、Boss、對戰畫面不放） |
 | Quest | 今日關卡／第 N 區 第 M 關 | 題號與進度條、本關累計 XP、等級條、情境標籤、🔁 標示、面試官 💼 情境框、4 選項（A～D）、費曼教練提示、Combo 橫幅、「已加入快忘清單」提示、下一題／看結算按鈕 |
-| Result | 關卡結算 | 答對數（含提示後答對）、獲得 XP、連續天數（今日關卡，+1 時有彈跳動畫）或「第 N 區 第 M 關 通過」（地圖關卡，附「下一關」按鈕）、等級條、複仇成功、新加入快忘清單、寢室排行榜（假資料）、「返回首頁」與「👥 去對戰」按鈕 |
+| Result | 關卡結算 | 答對數（含提示後答對）、獲得 XP、連續天數（今日關卡，+1 時有彈跳動畫）或「第 N 區 第 M 關 通過」（地圖關卡，附「下一關」按鈕）、等級條、複仇成功、新加入快忘清單、寢室排行榜（假資料）、「返回首頁」與「👥 去對戰」按鈕、作者頁尾（同首頁） |
 | Boss | Boss 關：命題教授 | 教授頭像與 3 格血條、玩家 3 條命、教授台詞、陷阱題 |
 | BossResult | Boss 關結果 | 勝：🏅 通關畫面、獎章名稱、首次通關獎勵文字、下一區解鎖提示；敗：教授剩餘血量、「答錯的字已加入快忘清單」；都有「返回首頁」與「再戰教授」按鈕 |
 | BattleLobby | 雙人對戰 | 第一次進入時跳出暱稱輸入框；「快速配對（機器人）」（配對中… 2 秒 → 找到對手：阿明 Lv.4 → 2 秒後開始）、「取消配對」；「建立房間」、「輸入房號加入」；對戰排行榜前 10 名（6.7） |

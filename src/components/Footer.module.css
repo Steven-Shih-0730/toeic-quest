@@ -1,0 +1,7 @@
+.footer {
+  padding: 8px 0 4px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.footer a { color: var(--text-muted); text-decoration: underline; }

@@ -1,5 +1,6 @@
 import styles from './Result.module.css';
 import ProgressBar from '../components/ProgressBar';
+import Footer from '../components/Footer';
 import type { QuestSummary } from '../lib/quest';
 import { XP_PER_LEVEL } from '../lib/scoring';
 import type { Player } from '../types';
@@ -130,6 +131,8 @@ export default function Result({ summary, player, mode, onHome, onBattle, onNext
           👥 去對戰
         </button>
       </div>
+
+      <Footer />
     </main>
   );
 }
