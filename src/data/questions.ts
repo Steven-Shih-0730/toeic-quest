@@ -103,7 +103,7 @@ export const QUESTIONS: Question[] = [
   {
     id: 'z1-overdue', word: 'overdue', zh: '逾期未付的', zone: 1, tag: 'interviewer',
     ctx: '有一張請款單已經過了付款期限，你要寫信禮貌地提醒客戶。哪個字最適合？',
-    stem: 'This is a friendly note that invoice #2047 is now two weeks ____.',
+    stem: 'This is a courtesy reminder that invoice #2047 is now two weeks ____.',
     options: ['overdue', 'overall', 'overtime', 'overseas'], answer: 0,
     hint: '已經「超過付款日」，錢還沒付。',
     explanation: 'overdue 是「逾期未付的」。two weeks overdue 就是逾期兩週。',
@@ -184,7 +184,7 @@ export const QUESTIONS: Question[] = [
   {
     id: 'z2-venue', word: 'venue', zh: '場地、地點', zone: 2, tag: 'notice',
     stem: 'The annual sales conference has a new ____ this year: the Grand Harbor Hotel in Kaohsiung.',
-    options: ['venue', 'value', 'vendor', 'version'], answer: 0,
+    options: ['venue', 'value', 'venture', 'version'], answer: 0,
     hint: '冒號後面接一間飯店的名字：活動「舉辦的地方」。',
     explanation: 'venue 是「（活動的）場地、地點」。conference venue 就是會議場地。',
   },
@@ -265,7 +265,7 @@ export const QUESTIONS: Question[] = [
   },
   {
     id: 'z2-adopt', word: 'adopt', zh: '採用、採納', zone: 2, tag: 'professor',
-    stem: 'The committee voted to ____ the new travel policy starting next quarter.',
+    stem: 'The committee voted to ____ the new travel policy, which will replace the old rules next quarter.',
     options: ['adapt', 'adopt', 'adept', 'adore'], answer: 1,
     hint: '委員會投票決定「採用」一項政策。只差一個母音的那個字是「調整、適應」。',
     explanation: 'adopt 是「採用、採納」；adapt 是「改編、適應」，例如 adapt to a new schedule。',
@@ -273,15 +273,15 @@ export const QUESTIONS: Question[] = [
   {
     id: 'z2-ensure', word: 'ensure', zh: '確保', zone: 2, tag: 'professor',
     stem: 'Please test the projector before the meeting to ____ that everything works properly.',
-    options: ['ensure', 'insure', 'endure', 'unsure'], answer: 0,
-    hint: '後面接 that 子句，意思是「確保」某件事會發生，不是去買保險。',
-    explanation: 'ensure 是「確保」；insure 是「投保」；endure 是「忍受」。',
+    options: ['ensure', 'enlarge', 'endure', 'unsure'], answer: 0,
+    hint: '後面接 that 子句，意思是「確保」某件事一定會發生。',
+    explanation: 'ensure 是「確保」；enlarge 是「放大」，endure 是「忍受」。另一個常考的 insure 是「投保」，別混淆。',
   },
   {
     id: 'z2-stationery', word: 'stationery', zh: '文具', zone: 2, tag: 'professor',
     stem: 'Pens, notepads, and other ____ for the workshop are stored in the cabinet next to the meeting room.',
     options: ['stationary', 'stationery', 'station', 'statement'], answer: 1,
-    hint: '筆、便條紙這類東西。記法：這個字的 e 是 envelope（信封）的 e。',
+    hint: '前面有 other，這格需要名詞「文具」；長得像的那個字是形容詞「靜止的」。',
     explanation: 'stationery 是「文具」；stationary 是形容詞「靜止不動的」。',
   },
   {
@@ -366,7 +366,7 @@ export const QUESTIONS: Question[] = [
   {
     id: 'z3-mentor', word: 'mentor', zh: '導師、指導者', zone: 3, tag: 'email',
     stem: 'Each new hire will be paired with an experienced ____ who can answer questions about daily work.',
-    options: ['mentor', 'monitor', 'member', 'motor'], answer: 0,
+    options: ['mentor', 'monitor', 'mentee', 'motor'], answer: 0,
     hint: '帶新人、分享經驗的「資深前輩」。',
     explanation: 'mentor 是「導師、指導者」。公司常見的 mentor program 就是導師制度。',
   },
@@ -505,10 +505,10 @@ export const QUESTIONS: Question[] = [
   },
   {
     id: 'z4-brochure', word: 'brochure', zh: '宣傳小冊子', zone: 4, tag: 'notice',
-    stem: 'Free ____ describing our travel packages are available at the reception desk.',
+    stem: 'Free ____ describing our new product line are available at the front desk.',
     options: ['brochures', 'branches', 'brokers', 'bruises'], answer: 0,
     hint: '放在櫃檯、可以免費拿的「介紹手冊」。',
-    explanation: 'brochure 是「宣傳小冊子」。旅行社、飯店常放在櫃檯讓客人拿。',
+    explanation: 'brochure 是「宣傳小冊子」。公司常把介紹產品的 brochure 放在櫃檯或展場讓客人拿。',
   },
   {
     id: 'z4-feedback', word: 'feedback', zh: '回饋意見', zone: 4, tag: 'email',
@@ -569,7 +569,7 @@ export const QUESTIONS: Question[] = [
     stem: 'Buying in bulk is the most ____ option for small restaurants that want to cut costs.',
     options: ['economic', 'economical', 'economist', 'ecological'], answer: 1,
     hint: '想省錢的餐廳：最「省錢」的選擇。另一個字是「經濟（學）上的」。',
-    explanation: 'economical 是「節省的、划算的」；economic 是「經濟的」，例如 economic growth（經濟成長）。',
+    explanation: 'economical 是「節省的、划算的」；economic 是「經濟的」，例如 economic growth（經濟成長）。多益問「省錢的選擇」一律用 economical。',
   },
   {
     id: 'z4-respectively', word: 'respectively', zh: '分別地', zone: 4, tag: 'professor',
@@ -713,16 +713,16 @@ export const QUESTIONS: Question[] = [
   },
   {
     id: 'z5-latter', word: 'latter', zh: '後者', zone: 5, tag: 'professor',
-    stem: 'Between the morning and evening flights, I prefer the ____ because I can finish my work first.',
+    stem: 'We compared two hotels; the former is cheaper, but the ____ is closer to the conference center.',
     options: ['later', 'latter', 'ladder', 'letter'], answer: 1,
-    hint: '前面提到兩個選項，這裡指「第二個」。多一個 t。',
+    hint: '前面提到兩個選項，這裡指「第二個」。想想 the former（前者）的相反。',
     explanation: 'the latter 是「後者」（相對 the former 前者）；later 是「之後、較晚」。',
   },
   {
     id: 'z5-altogether', word: 'altogether', zh: '總共', zone: 5, tag: 'professor',
     stem: 'The trip will cost about NT$40,000 ____, including flights, hotel, and meals.',
     options: ['all together', 'altogether', 'already', 'all ready'], answer: 1,
-    hint: '機票、飯店、餐費「全部加起來」多少錢。中間沒有空格的那個寫法。',
+    hint: '這裡要表達機票、飯店、餐費「加起來總共」多少錢；另一種寫法是「大家一起」的意思。',
     explanation: 'altogether 是「總共、完全」；all together 是「全部一起」，例如 We went there all together。',
   },
   {
