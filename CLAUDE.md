@@ -20,9 +20,16 @@ TOEIC Quest 是給「準備多益的大學生」用的手機網頁 App。它用 
 - [x] 階段 3：今日關卡、提示機制、結算頁
 - [x] 階段 4：Boss 關與對戰（機器人對手）
 - [x] 階段 5：真人連線對戰（Supabase Realtime）
-- [ ] 階段 6：部署到 Vercel
+- [x] 階段 6：部署到 Vercel
 
 完成一個階段就把對應項目打勾。
+
+部署資訊：
+
+- 正式網址：https://toeic-quest-swart.vercel.app（Vercel 專案 `toeic-quest`；本機用 `npx vercel deploy --prod` 重新部署）
+- Supabase 專案：`toeic-quest`（東京，只用 Realtime，沒有資料表）
+- 正式版 `VITE_SHOW_DEMO_PANEL=false`（隱藏齒輪）；預覽版為 `true`
+- 部署保護：正式網址公開，預覽版需登入 Vercel
 
 ## 3. 技術棧
 
