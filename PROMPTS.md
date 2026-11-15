@@ -1,5 +1,7 @@
 # TOEIC Quest：給 Claude Code 的分階段提示詞
 
+作者：施定宇 (Steven Shih)
+
 ## 開工前準備
 
 1. 建一個空資料夾，例如 `toeic-quest/`。
