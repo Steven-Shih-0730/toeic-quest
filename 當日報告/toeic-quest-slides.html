@@ -173,6 +173,9 @@ h1.t .hl{color:var(--gold-deep)}
 .mix span{display:inline-block;transform:translateX(-50%);background:var(--ink);color:var(--gold);padding:10px 22px;border-radius:16px;white-space:nowrap}
 .banner{background:var(--ink);color:var(--cream);border-radius:20px;padding:20px 36px;font-size:44px;font-weight:900;text-align:center;margin-top:10px}
 .banner span{color:var(--gold)}
+a.banner{display:block;text-decoration:none;cursor:pointer;transition:transform .2s,box-shadow .2s}
+a.banner:hover{transform:translateY(-3px);box-shadow:0 8px 0 var(--gold)}
+.banner .go{font-size:40px;color:var(--gold)}
 
 /* P11 Boss */
 .boss{display:flex;gap:44px;align-items:center;margin-top:30px}
@@ -405,40 +408,7 @@ h1.t .hl{color:var(--gold-deep)}
   <div class="pageno">8</div>
 </section>
 
-<!-- P9 雙人對戰 -->
-<section class="slide" data-battle data-notes="（20 秒）「跟室友即時對戰 5 題，每題只有 10 秒。答得越快分數越高：得分是剩下的秒數乘以 10，連續答對還有 Combo 加成。」">
-  <h1 class="t anim">雙人對戰：<span class="hl">比誰快</span></h1>
-  <div class="bar anim" style="--d:.1s"></div>
-  <div class="vs">
-    <div class="pl me anim" style="--d:.3s;--a:slideR"><div class="e">🙋</div><div class="n">你</div></div>
-    <div class="ring anim" style="--d:.5s;--a:popIn">
-      <svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" fill="#fff" stroke="#E6DFCC" stroke-width="9"/><circle class="ringfg" cx="50" cy="50" r="44" fill="none" stroke="#CFB53B" stroke-width="9" stroke-linecap="round" stroke-dasharray="276.5" stroke-dashoffset="0"/></svg>
-      <div class="num"><b id="cd">10</b><span>秒</span></div>
-    </div>
-    <div class="pl anim" style="--d:.3s;--a:slideL"><div class="e">🧑</div><div class="n">室友</div></div>
-  </div>
-  <div class="rules">
-    <div class="rule anim" style="--d:.8s">⏱ 5 題 × 10 秒</div>
-    <div class="rule k anim" style="--d:1s">🏆 得分 = 剩餘秒數 × 10</div>
-    <div class="rule anim" style="--d:1.2s">🔥 Combo 加成</div>
-  </div>
-  <div class="pageno">9</div>
-</section>
-
-<!-- P10 對戰也是複習 -->
-<section class="slide" data-notes="（15 秒）「最重要的是：對戰的題目，出自你們兩個人的快忘清單。所以你們在比賽的同時，其實是在複習彼此的弱點字。玩，就是在複習。」">
-  <h1 class="t anim">對戰，<span class="hl">也是複習</span></h1>
-  <div class="bar anim" style="--d:.1s"></div>
-  <div class="venn">
-    <div class="cir a anim" style="--d:.3s;--a:slideR">你的<br>快忘清單</div>
-    <div class="cir b anim" style="--d:.3s;--a:slideL">室友的<br>快忘清單</div>
-    <div class="mix anim" style="--d:1s;--a:popIn"><span>⚔️ 對戰題目</span></div>
-  </div>
-  <div class="banner anim" style="--d:1.4s">玩，就是在<span>複習彼此的弱點</span></div>
-  <div class="pageno">10</div>
-</section>
-
-<!-- P11 Boss 關 -->
+<!-- P9 Boss 關 -->
 <section class="slide" data-notes="（25 秒）「冒險地圖每一區的第 10 關，是命題教授 Boss。他只出易混淆字的陷阱題，共 3 題。」連按三次 →：「答對一題，扣他一格血……兩格……三格！」再按 →：「打倒他，這一區就通關，拿到徽章。」">
   <h1 class="t anim">Boss 關：<span class="hl">打倒命題教授</span></h1>
   <div class="bar anim" style="--d:.1s"></div>
@@ -466,16 +436,49 @@ h1.t .hl{color:var(--gold-deep)}
     <div class="badge"><span class="m">🏅</span><div class="w1">通關！</div><div class="w2">獲得命題教授徽章</div></div>
     <div class="cfwrap"></div>
   </div>
+  <div class="pageno">9</div>
+</section>
+
+<!-- P10 雙人對戰 -->
+<section class="slide" data-battle data-notes="（20 秒）「跟室友即時對戰 5 題，每題只有 10 秒。答得越快分數越高：得分是剩下的秒數乘以 10，連續答對還有 Combo 加成。」">
+  <h1 class="t anim">雙人對戰：<span class="hl">比誰快</span></h1>
+  <div class="bar anim" style="--d:.1s"></div>
+  <div class="vs">
+    <div class="pl me anim" style="--d:.3s;--a:slideR"><div class="e">🙋</div><div class="n">你</div></div>
+    <div class="ring anim" style="--d:.5s;--a:popIn">
+      <svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" fill="#fff" stroke="#E6DFCC" stroke-width="9"/><circle class="ringfg" cx="50" cy="50" r="44" fill="none" stroke="#CFB53B" stroke-width="9" stroke-linecap="round" stroke-dasharray="276.5" stroke-dashoffset="0"/></svg>
+      <div class="num"><b id="cd">10</b><span>秒</span></div>
+    </div>
+    <div class="pl anim" style="--d:.3s;--a:slideL"><div class="e">🧑</div><div class="n">室友</div></div>
+  </div>
+  <div class="rules">
+    <div class="rule anim" style="--d:.8s">⏱ 5 題 × 10 秒</div>
+    <div class="rule k anim" style="--d:1s">🏆 得分 = 剩餘秒數 × 10</div>
+    <div class="rule anim" style="--d:1.2s">🔥 Combo 加成</div>
+  </div>
+  <div class="pageno">10</div>
+</section>
+
+<!-- P11 對戰也是複習 -->
+<section class="slide" data-notes="（15 秒）「最重要的是：對戰的題目，出自你們兩個人的快忘清單。所以你們在比賽的同時，其實是在複習彼此的弱點字。玩，就是在複習。」">
+  <h1 class="t anim">對戰，<span class="hl">也是複習</span></h1>
+  <div class="bar anim" style="--d:.1s"></div>
+  <div class="venn">
+    <div class="cir a anim" style="--d:.3s;--a:slideR">你的<br>快忘清單</div>
+    <div class="cir b anim" style="--d:.3s;--a:slideL">室友的<br>快忘清單</div>
+    <div class="mix anim" style="--d:1s;--a:popIn"><span>⚔️ 對戰題目</span></div>
+  </div>
+  <a class="banner anim" style="--d:1.4s" href="https://toeic-quest-swart.vercel.app/" target="_blank" rel="noopener">玩，就是在<span>複習彼此的弱點</span> <span class="go">↗</span></a>
   <div class="pageno">11</div>
 </section>
 
 <!-- P12 現況與下一步 -->
-<section class="slide" data-notes="（20 秒）「目前是純前端的 demo，題目是我自己出的，排行榜跟對手都是示範資料。下一步要擴充題庫，把其他 4 區做出來。如果你也在準備多益，會不會每天回來玩 30 秒？歡迎會後告訴我。」">
+<section class="slide" data-notes="（20 秒）「目前我們用遊戲 app 降低大家對念書的排斥，有 25 題原創題，也用對戰模式激起好勝心。下一步要擴充題庫、新增聽力題目，也很想聽聽你們的想法。如果你也在準備多益，會不會每天回來玩 30 秒？」">
   <h1 class="t anim">還在<span class="hl">新手村</span> 🌱</h1>
   <div class="bar anim" style="--d:.1s"></div>
   <div class="cols">
-    <div class="col anim" style="--d:.3s"><h3>✅ 現在</h3><ul><li>前端 demo</li><li>25 題原創題</li><li>示範資料</li></ul></div>
-    <div class="col next anim" style="--d:.55s"><h3>⏳ 下一步</h3><div class="one">擴充題庫<br>與 4 區</div></div>
+    <div class="col anim" style="--d:.3s"><h3>✅ 現在</h3><ul><li>用遊戲 app 降低學習排斥</li><li>25 題原創題</li><li>對戰模式激起好勝心</li></ul></div>
+    <div class="col next anim" style="--d:.55s"><h3>⏳ 下一步</h3><ul><li>擴充題庫</li><li>新增聽力題目</li><li>想聽聽你們的想法！</li></ul></div>
   </div>
   <div class="ask anim" style="--d:.9s;--a:popIn">你會每天回來玩 <span>30 秒</span> 嗎？</div>
   <div class="pageno">12</div>
@@ -554,7 +557,7 @@ addEventListener('keydown',e=>{
   else if(e.key==='f'||e.key==='F'){if(!document.fullscreenElement)document.documentElement.requestFullscreen?.();else document.exitFullscreen?.();}
   else if(e.key==='n'||e.key==='N')notes.classList.toggle('on');
 });
-document.getElementById('viewport').addEventListener('click',e=>{if(e.clientX>innerWidth/3)next();else prev();});
+document.getElementById('viewport').addEventListener('click',e=>{if(e.target.closest('a'))return;if(e.clientX>innerWidth/3)next();else prev();});
 let tx=null;
 addEventListener('touchstart',e=>{tx=e.touches[0].clientX},{passive:true});
 addEventListener('touchend',e=>{if(tx===null)return;const dx=e.changedTouches[0].clientX-tx;if(Math.abs(dx)>50)(dx<0?next:prev)();tx=null;});
