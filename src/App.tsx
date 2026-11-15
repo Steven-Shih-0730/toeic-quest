@@ -28,6 +28,9 @@ import { BOSS_STAGE, clearStage, isBossUnlocked, isZoneCleared, nextNormalStage,
 import { clearSave, loadSave, writeSave } from './lib/storage';
 import type { GameState, Player, Question } from './types';
 
+/** 正式版用 VITE_SHOW_DEMO_PANEL=false 隱藏展示用控制面板（CLAUDE.md 第 7 節） */
+const SHOW_DEMO_PANEL = import.meta.env.VITE_SHOW_DEMO_PANEL !== 'false';
+
 export type Screen =
   | 'home'
   | 'quest'
@@ -270,9 +273,9 @@ export default function App() {
           title={TITLES[screen]}
           showBack={screen !== 'home'}
           onBack={() => go('home')}
-          onToggleSettings={() => setPanelOpen((v) => !v)}
+          onToggleSettings={SHOW_DEMO_PANEL ? () => setPanelOpen((v) => !v) : undefined}
         />
-        {panelOpen && (
+        {SHOW_DEMO_PANEL && panelOpen && (
           <DemoPanel
             dateText={formatShortDate(todayIso)}
             bossUnlocked={isBossUnlocked(game.player.clearedStages, CURRENT_ZONE)}

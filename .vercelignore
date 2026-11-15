@@ -1,0 +1,5 @@
+# 部署時不需要上傳的檔案
+reference/
+.env.local
+.env*.local
+coverage/

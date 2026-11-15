@@ -4,7 +4,8 @@ interface Props {
   title: string;
   showBack: boolean;
   onBack: () => void;
-  onToggleSettings: () => void;
+  /** 沒有傳入時不顯示齒輪（正式版隱藏展示用控制面板） */
+  onToggleSettings?: () => void;
 }
 
 export default function TopBar({ title, showBack, onBack, onToggleSettings }: Props) {
@@ -16,9 +17,11 @@ export default function TopBar({ title, showBack, onBack, onToggleSettings }: Pr
         </button>
       )}
       <h1 className={styles.title}>{title}</h1>
-      <button type="button" className={styles.gear} onClick={onToggleSettings} aria-label="展示用控制面板">
-        ⚙️
-      </button>
+      {onToggleSettings && (
+        <button type="button" className={styles.gear} onClick={onToggleSettings} aria-label="展示用控制面板">
+          ⚙️
+        </button>
+      )}
     </header>
   );
 }
