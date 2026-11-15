@@ -57,6 +57,7 @@ VITE_SUPABASE_ANON_KEY=
 reference/demo.html        # artifact 做好的 demo（打包檔），不直接修改
 reference/demo-source.html # demo 解開後的原始碼，開發時以這份為參考
 public/icons/              # PWA 圖示 PNG（深藍底、金色圓、⚔️，用 Chrome 算圖產生）
+docs/                      # 安裝用 QR code（Android、iOS 各一張）
 src/
   data/questions.ts        # 題庫
   data/seed.ts             # demo 用初始假資料
@@ -242,6 +243,13 @@ PWA（階段 7）：
   - 連線對戰需要網路，Supabase 的連線不經過 service worker。
 - 更新：新版部署後自動更新（`registerType: 'autoUpdate'`），下次打開就是新版，不跳詢問。
 - 開發模式（`npm run dev`）不啟用 service worker，避免快取干擾開發。
+- 安裝引導（首頁最上方的卡片）：
+  - 已經從主畫面打開（standalone）時不顯示。
+  - Android：攔截 `beforeinstallprompt`，顯示「📲 安裝到主畫面」按鈕，按下直接跳出系統安裝視窗；瀏覽器不支援時改顯示「⋮ → 安裝應用程式」步驟。
+  - iPhone／iPad：Apple 不允許網頁觸發安裝，顯示「分享 → 加入主畫面 → 新增」步驟。
+  - 網址帶 `?install=android` 或 `?install=ios` 時一定顯示，並以參數決定顯示哪個平台；沒有參數時依裝置判斷，只在手機上顯示。
+  - 「之後再說」會記在 localStorage，不再自動顯示（網址帶參數時仍會顯示）。
+- 安裝用 QR code：`docs/qrcode-android.png`、`docs/qrcode-ios.png`，分別指向正式網址加上 `?install=android`、`?install=ios`。
 
 初始假資料（`seed.ts`，日期以重設當下的 `today()` 為基準）：小陳 Lv.3、本級 240 XP、連續 6 天、`lastActiveDate` = 昨天、`clearedStages` = [1..6]；快忘清單 reimburse、invoice（今天到期）、itinerary（明天到期）、deadline（3 天後到期）。初始沒有已記住的字（已記住 0 字）。
 

@@ -2,6 +2,7 @@ import styles from './Home.module.css';
 import type { Screen } from '../App';
 import AdventureMap from '../components/AdventureMap';
 import ForgetList from '../components/ForgetList';
+import InstallGuide from '../components/InstallGuide';
 import ProgressBar from '../components/ProgressBar';
 import { formatShortDate } from '../lib/clock';
 import { XP_PER_LEVEL } from '../lib/scoring';
@@ -36,6 +37,7 @@ export default function Home({ game, todayIso, toast, toastKey, onStartDaily, on
           {toast}
         </div>
       )}
+      <InstallGuide />
 
       <section className={styles.playerCard}>
         <div className={styles.playerRow}>
