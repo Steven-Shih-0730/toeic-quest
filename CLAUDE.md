@@ -29,7 +29,6 @@ TOEIC Quest 是給「準備多益的大學生」用的手機網頁 App。它用 
 部署資訊：
 
 - 作者：施定宇 (Steven Shih)
-
 - 正式網址：https://toeic-quest-swart.vercel.app（Vercel 專案 `toeic-quest`）
 - GitHub：https://github.com/Steven-Shih-0730/toeic-quest（公開，MIT 授權；已連上 Vercel：push 到 `master` 自動部署正式版，其他分支產生預覽版）
 - Supabase 專案：`toeic-quest`（東京，只用 Realtime，沒有資料表）
