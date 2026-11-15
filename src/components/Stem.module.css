@@ -1,0 +1,26 @@
+.stem {
+  padding: 16px;
+  border-radius: 16px;
+  background: var(--card);
+  font-size: 17px;
+  line-height: 1.7;
+  font-weight: 500;
+}
+
+.blank,
+.filled {
+  display: inline-block;
+  min-width: 4.5em;
+  margin: 0 2px;
+  border-bottom: 2px solid var(--gold);
+  text-align: center;
+  line-height: 1.3;
+}
+
+.filled {
+  min-width: 0;
+  padding: 0 4px;
+  color: #7ff0ae;
+  font-weight: 700;
+  border-bottom-color: var(--green);
+}

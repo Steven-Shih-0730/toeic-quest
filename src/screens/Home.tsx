@@ -14,6 +14,7 @@ interface Props {
   /** 齒輪面板操作後的提示文字，空字串表示不顯示 */
   toast: string;
   toastKey: number;
+  onStartDaily: () => void;
   onNavigate: (screen: Screen) => void;
 }
 
@@ -24,7 +25,7 @@ function dailyNote(game: GameState, todayIso: string): string {
   return '5 題・約 3 分鐘';
 }
 
-export default function Home({ game, todayIso, toast, toastKey, onNavigate }: Props) {
+export default function Home({ game, todayIso, toast, toastKey, onStartDaily, onNavigate }: Props) {
   const { player, progress } = game;
 
   return (
@@ -65,12 +66,12 @@ export default function Home({ game, todayIso, toast, toastKey, onNavigate }: Pr
       <AdventureMap
         player={player}
         todayIso={todayIso}
-        onStartDaily={() => onNavigate('quest')}
+        onStartDaily={onStartDaily}
         onStartBoss={() => onNavigate('boss')}
       />
 
       <div className={styles.actions}>
-        <button type="button" className={styles.dailyBtn} onClick={() => onNavigate('quest')}>
+        <button type="button" className={styles.dailyBtn} onClick={onStartDaily}>
           <span>⚔️ 今日關卡</span>
           <span className={styles.btnNote}>{dailyNote(game, todayIso)}</span>
         </button>

@@ -1,0 +1,64 @@
+.page {
+  padding: 14px 14px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.header { display: flex; flex-direction: column; gap: 6px; }
+.headRow { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.qNo { font-size: 17px; font-weight: 900; }
+.gained { font-size: 13px; color: var(--gold-soft); font-weight: 700; white-space: nowrap; }
+
+.levelRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.levelBar { flex: 1; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+
+.chip,
+.chipGold {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.chip { background: var(--chip); color: #dfe6ff; }
+.chipGold { background: var(--gold); color: var(--gold-text); }
+
+.ctx {
+  padding: 12px;
+  border-radius: 14px;
+  background: #20305f;
+  border: 1px dashed #7f9cf0;
+  display: flex;
+  gap: 10px;
+}
+.ctxIcon { font-size: 26px; }
+.ctxTitle { font-weight: 900; font-size: 14px; }
+.ctxText { font-size: 14px; color: #dfe6ff; }
+
+.options { display: flex; flex-direction: column; gap: 10px; }
+
+.retry { font-size: 13px; font-weight: 700; color: var(--gold-soft); }
+.pin { font-size: 12px; opacity: 0.85; }
+
+.next {
+  min-height: 54px;
+  border-radius: 16px;
+  border: none;
+  background: var(--blue);
+  color: var(--blue-text);
+  font-size: 17px;
+  font-weight: 900;
+  box-shadow: 0 5px 0 #2f55b8;
+}
+.next:active { transform: translateY(4px); box-shadow: 0 1px 0 #2f55b8; }

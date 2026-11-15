@@ -1,0 +1,27 @@
+.box {
+  padding: 12px;
+  border-radius: 14px;
+  border: 2px solid;
+  display: flex;
+  gap: 10px;
+  font-size: 14px;
+  animation: rise 0.35s ease both;
+}
+
+.face { font-size: 30px; line-height: 1.2; }
+.body { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.title { font-weight: 900; font-size: 15px; }
+
+.hint { background: #2b2a1a; border-color: var(--gold); color: #fff4d1; }
+.hint .title { color: var(--gold-soft); }
+
+.ok { background: #12382a; border-color: var(--green); color: #dff8ea; }
+.ok .title { color: #7ff0ae; font-size: 16px; }
+
+.bad { background: #3a1a26; border-color: var(--red); color: #ffe3e4; }
+.bad .title { color: #ffb3b6; }
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}

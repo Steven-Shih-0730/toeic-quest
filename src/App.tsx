@@ -4,29 +4,39 @@ import TopBar from './components/TopBar';
 import DemoPanel from './components/DemoPanel';
 import Home from './screens/Home';
 import Placeholder from './screens/Placeholder';
+import Quest from './screens/Quest';
+import Result from './screens/Result';
+import { QUESTIONS } from './data/questions';
 import { createSeed } from './data/seed';
 import { CURRENT_ZONE } from './data/zones';
 import { addDays, formatShortDate, getOffsetDays, setOffsetDays, today } from './lib/clock';
-import { refreshStreak } from './lib/scoring';
-import { dueWords } from './lib/srs';
-import { isBossUnlocked, unlockBoss } from './lib/stages';
+import { buildDailyQuest } from './lib/quest';
+import type { QuestItem, QuestSummary } from './lib/quest';
+import { addXp, completeDaily, refreshStreak } from './lib/scoring';
+import { dueWords, recordAnswer } from './lib/srs';
+import { clearStage, isBossUnlocked, nextNormalStage, stageId, unlockBoss } from './lib/stages';
 import { clearSave, loadSave, writeSave } from './lib/storage';
-import type { GameState } from './types';
+import type { GameState, Player } from './types';
 
-export type Screen = 'home' | 'quest' | 'boss' | 'battleLobby';
+export type Screen = 'home' | 'quest' | 'result' | 'boss' | 'battleLobby';
 
 const TITLES: Record<Screen, string> = {
   home: '多益打怪 TOEIC Quest',
   quest: '今日關卡',
+  result: '關卡結算',
   boss: 'Boss 關：命題教授',
   battleLobby: '雙人對戰',
 };
 
-const PLACEHOLDER_NOTE: Record<Exclude<Screen, 'home'>, string> = {
-  quest: '今日關卡會在階段 3 完成。',
+const PLACEHOLDER_NOTE: Partial<Record<Screen, string>> = {
   boss: 'Boss 關會在階段 4 完成。',
   battleLobby: '雙人對戰會在階段 4 完成。',
 };
+
+function withXp(player: Player, amount: number): Player {
+  const { levelsGained: _ignored, ...next } = addXp(player, amount);
+  return next;
+}
 
 interface World {
   todayIso: string;
@@ -57,6 +67,8 @@ export default function App() {
   const [screen, setScreen] = useState<Screen>('home');
   const [panelOpen, setPanelOpen] = useState(false);
   const [toast, setToast] = useState<Toast | null>(null);
+  const [quest, setQuest] = useState<{ items: QuestItem[]; key: number } | null>(null);
+  const [result, setResult] = useState<{ summary: QuestSummary; streakUp: boolean } | null>(null);
   const { todayIso, game } = world;
 
   // 狀態有變就存檔（storage 內部已處理無法存取的情況）
@@ -77,6 +89,33 @@ export default function App() {
     setScreen(next);
     setPanelOpen(false);
     window.scrollTo(0, 0);
+  };
+
+  const startDaily = () => {
+    setQuest({ items: buildDailyQuest(QUESTIONS, game.progress, todayIso, CURRENT_ZONE), key: Date.now() });
+    go('quest');
+  };
+
+  const handleAnswer = (record: { word: string; correct: boolean } | undefined, xp: number) => {
+    setWorld((w) => ({
+      ...w,
+      game: {
+        progress: record ? recordAnswer(w.game.progress, record.word, record.correct, w.todayIso) : w.game.progress,
+        player: xp > 0 ? withXp(w.game.player, xp) : w.game.player,
+      },
+    }));
+  };
+
+  const finishDaily = (summary: QuestSummary) => {
+    // 同一天第一次完成：連續天數 +1，並推進一關
+    const { player, streakUp } = completeDaily(game.player, todayIso);
+    let cleared = player.clearedStages;
+    const next = nextNormalStage(cleared, CURRENT_ZONE);
+    if (streakUp && next !== undefined) cleared = clearStage(cleared, stageId(CURRENT_ZONE, next));
+    setWorld({ todayIso, game: { ...game, player: { ...player, clearedStages: cleared } } });
+    setResult({ summary, streakUp });
+    setQuest(null);
+    go('result');
   };
 
   const handleNextDay = () => {
@@ -131,11 +170,29 @@ export default function App() {
         )}
       </div>
 
-      {screen === 'home' ? (
-        <Home game={game} todayIso={todayIso} toast={toast?.text ?? ''} toastKey={toast?.id ?? 0} onNavigate={go} />
-      ) : (
-        <Placeholder note={PLACEHOLDER_NOTE[screen]} onHome={() => go('home')} />
+      {screen === 'home' && (
+        <Home
+          game={game}
+          todayIso={todayIso}
+          toast={toast?.text ?? ''}
+          toastKey={toast?.id ?? 0}
+          onStartDaily={startDaily}
+          onNavigate={go}
+        />
       )}
+      {screen === 'quest' && quest && (
+        <Quest key={quest.key} items={quest.items} player={game.player} onAnswer={handleAnswer} onFinish={finishDaily} />
+      )}
+      {screen === 'result' && result && (
+        <Result
+          summary={result.summary}
+          player={game.player}
+          streakUp={result.streakUp}
+          onHome={() => go('home')}
+          onBattle={() => go('battleLobby')}
+        />
+      )}
+      {PLACEHOLDER_NOTE[screen] && <Placeholder note={PLACEHOLDER_NOTE[screen]!} onHome={() => go('home')} />}
     </div>
   );
 }
