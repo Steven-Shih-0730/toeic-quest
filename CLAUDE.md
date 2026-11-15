@@ -18,7 +18,7 @@ TOEIC Quest 是給「準備多益的大學生」用的手機網頁 App。它用 
 - [x] 階段 1：專案骨架與首頁
 - [x] 階段 2：題庫、間隔重複邏輯與單元測試
 - [x] 階段 3：今日關卡、提示機制、結算頁
-- [ ] 階段 4：Boss 關與對戰（機器人對手）
+- [x] 階段 4：Boss 關與對戰（機器人對手）
 - [ ] 階段 5：真人連線對戰（Supabase Realtime）
 - [ ] 階段 6：部署到 Vercel
 
@@ -56,8 +56,9 @@ src/
   lib/scoring.ts           # 經驗值、Combo、連續天數、對戰計分
   lib/stages.ts            # 關卡編號、推進與 Boss 解鎖
   lib/quest.ts             # 今日關卡出題與作答流程
+  lib/boss.ts              # Boss 關抽題與血量／生命
   lib/storage.ts           # localStorage 讀寫
-  lib/battle/              # 對戰：機器人與連線
+  lib/battle/              # 對戰：types.ts（Opponent 介面）、engine.ts（房主規則）、bot.ts（機器人）、realtime.ts（階段 5）
   screens/                 # Home, Quest, Result, Boss, BossResult, BattleLobby, Battle, BattleResult
   components/              # 共用元件：TopBar, DemoPanel, ProgressBar, ComboBanner, CoachHint, TimerRing ...
 tests/                     # Vitest
@@ -94,6 +95,7 @@ interface WordProgress {
 interface Player {
   id: string;            // 隨機產生的匿名 id
   name: string;          // 預設「小陳」，第一次進對戰大廳時設定
+  nameConfirmed?: boolean; // 是否已在對戰大廳確認過暱稱
   level: number;
   xp: number;            // 目前等級內的經驗值，0~299
   streakDays: number;
@@ -175,7 +177,11 @@ interface Player {
 
 - 5 題，每題 10 秒。
 - 答對得分 = `Math.round(ceil(剩餘秒數) × 10 × Combo 加成)`；答錯或超時 0 分。Combo 加成同 6.4（連續答對 2 題以上 ×1.25）。
-- 題目優先從雙方的快忘清單抽，並標示「出自你的快忘清單」或「出自○○的快忘清單」。
+- 題目優先從雙方的快忘清單抽，並標示「出自你的快忘清單」或「出自○○的快忘清單」：
+  - 用整份快忘清單（到期的排前面），不限今天到期。
+  - 第 1、3、5 題優先放我的字（最多 3 題），其餘放對手的字；不夠時從題庫隨機補，標示「🎲 隨機題」。
+  - 機器人阿明（Lv.4）的快忘清單固定為：postpone、warranty、negotiate、agenda、shipment、approve、renovation、attendee。
+  - 機器人每題在 2～6 秒內隨機作答，答對率 70%。
 - 雙方都作答或時間到後，公布答案 2 秒再進下一題。
 - 對戰中答錯或超時的字，也要照 6.1 寫進自己的快忘清單。
 - 畫面下方顯示計分說明：「得分＝剩餘秒數 × 10，連續答對再 × 1.25」。
@@ -219,6 +225,34 @@ interface Player {
 ## 8. 真人連線對戰設計（Supabase Realtime）
 
 第一版只用 Broadcast 和 Presence，不建資料表、不做登入。
+
+### 8.0 Opponent 介面（機器人與真人共用同一個 Battle 畫面）
+
+Battle 畫面只依賴 `lib/battle/types.ts` 的 `Opponent` 介面：收事件、顯示、回報自己的作答，不自己出題或算分。
+
+```ts
+interface PlayerInfo { id: string; name: string; level: number; avatar: string }
+
+type BattleEvent =                       // 與 8.2 的訊息一一對應
+  | { type: 'start'; questionIds: string[]; sourceOf: Record<string, string> }
+  | { type: 'question'; index: number; startAt: number }
+  | { type: 'opponentAnswered'; index: number }
+  | { type: 'reveal'; index: number; scores: Record<string, number> }
+  | { type: 'end'; scores: Record<string, number> }
+  | { type: 'opponentLeft' };
+
+interface Opponent {
+  readonly profile: PlayerInfo;
+  start(me: PlayerInfo & { dueWords: string[] }): void;
+  answer(index: number, choice: number, remainingMs: number): void;
+  subscribe(listener: (e: BattleEvent) => void): () => void;
+  dispose(): void;
+}
+```
+
+- `lib/battle/engine.ts`：房主規則（選題、計分、Combo），純函式、不碰計時器。
+- `lib/battle/bot.ts`：`BotOpponent` 在本機當房主；可從「第 N 題、目前分數」接手（斷線改打機器人用）。
+- `lib/battle/realtime.ts`（階段 5）：`RealtimeOpponent`，房主跑 engine，加入者只轉送房主訊息。
 
 ### 8.1 流程
 

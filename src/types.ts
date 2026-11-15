@@ -31,6 +31,8 @@ export interface WordProgress {
 export interface Player {
   id: string;
   name: string;
+  /** 是否已在對戰大廳確認過暱稱 */
+  nameConfirmed?: boolean;
   level: number;
   /** 目前等級內的經驗值，0~299 */
   xp: number;

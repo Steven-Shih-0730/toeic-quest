@@ -15,6 +15,7 @@ interface Props {
   toast: string;
   toastKey: number;
   onStartDaily: () => void;
+  onStartBoss: () => void;
   onNavigate: (screen: Screen) => void;
 }
 
@@ -25,7 +26,7 @@ function dailyNote(game: GameState, todayIso: string): string {
   return '5 題・約 3 分鐘';
 }
 
-export default function Home({ game, todayIso, toast, toastKey, onStartDaily, onNavigate }: Props) {
+export default function Home({ game, todayIso, toast, toastKey, onStartDaily, onStartBoss, onNavigate }: Props) {
   const { player, progress } = game;
 
   return (
@@ -67,7 +68,7 @@ export default function Home({ game, todayIso, toast, toastKey, onStartDaily, on
         player={player}
         todayIso={todayIso}
         onStartDaily={onStartDaily}
-        onStartBoss={() => onNavigate('boss')}
+        onStartBoss={onStartBoss}
       />
 
       <div className={styles.actions}>

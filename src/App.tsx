@@ -2,35 +2,49 @@ import { useEffect, useState } from 'react';
 import styles from './App.module.css';
 import TopBar from './components/TopBar';
 import DemoPanel from './components/DemoPanel';
+import Battle from './screens/Battle';
+import type { BattleOutcome } from './screens/Battle';
+import BattleLobby from './screens/BattleLobby';
+import BattleResult from './screens/BattleResult';
+import Boss from './screens/Boss';
+import BossResult from './screens/BossResult';
 import Home from './screens/Home';
-import Placeholder from './screens/Placeholder';
 import Quest from './screens/Quest';
 import Result from './screens/Result';
 import { QUESTIONS } from './data/questions';
 import { createSeed } from './data/seed';
-import { CURRENT_ZONE } from './data/zones';
+import { CURRENT_ZONE, ZONES } from './data/zones';
+import { BotOpponent } from './lib/battle/bot';
+import type { Opponent, PlayerInfo } from './lib/battle/types';
+import { buildBossQuestions } from './lib/boss';
 import { addDays, formatShortDate, getOffsetDays, setOffsetDays, today } from './lib/clock';
 import { buildDailyQuest } from './lib/quest';
 import type { QuestItem, QuestSummary } from './lib/quest';
-import { addXp, completeDaily, refreshStreak } from './lib/scoring';
-import { dueWords, recordAnswer } from './lib/srs';
-import { clearStage, isBossUnlocked, nextNormalStage, stageId, unlockBoss } from './lib/stages';
+import { BOSS_FIRST_CLEAR_XP, addXp, battleReward, completeDaily, refreshStreak } from './lib/scoring';
+import { dueWords, forgetList, recordAnswer } from './lib/srs';
+import { BOSS_STAGE, clearStage, isBossUnlocked, isZoneCleared, nextNormalStage, stageId, unlockBoss } from './lib/stages';
 import { clearSave, loadSave, writeSave } from './lib/storage';
-import type { GameState, Player } from './types';
+import type { GameState, Player, Question } from './types';
 
-export type Screen = 'home' | 'quest' | 'result' | 'boss' | 'battleLobby';
+export type Screen =
+  | 'home'
+  | 'quest'
+  | 'result'
+  | 'boss'
+  | 'bossResult'
+  | 'battleLobby'
+  | 'battle'
+  | 'battleResult';
 
 const TITLES: Record<Screen, string> = {
   home: '多益打怪 TOEIC Quest',
   quest: '今日關卡',
   result: '關卡結算',
   boss: 'Boss 關：命題教授',
+  bossResult: 'Boss 關結果',
   battleLobby: '雙人對戰',
-};
-
-const PLACEHOLDER_NOTE: Partial<Record<Screen, string>> = {
-  boss: 'Boss 關會在階段 4 完成。',
-  battleLobby: '雙人對戰會在階段 4 完成。',
+  battle: '雙人對戰',
+  battleResult: '對戰結果',
 };
 
 function withXp(player: Player, amount: number): Player {
@@ -62,6 +76,12 @@ interface Toast {
   id: number;
 }
 
+interface BossEnd {
+  won: boolean;
+  bossHp: number;
+  firstClear: boolean;
+}
+
 export default function App() {
   const [world, setWorld] = useState<World>(initWorld);
   const [screen, setScreen] = useState<Screen>('home');
@@ -69,7 +89,13 @@ export default function App() {
   const [toast, setToast] = useState<Toast | null>(null);
   const [quest, setQuest] = useState<{ items: QuestItem[]; key: number } | null>(null);
   const [result, setResult] = useState<{ summary: QuestSummary; streakUp: boolean } | null>(null);
+  const [boss, setBoss] = useState<{ questions: Question[]; key: number } | null>(null);
+  const [bossEnd, setBossEnd] = useState<BossEnd | null>(null);
+  const [battle, setBattle] = useState<{ key: number; createOpponent: () => Opponent; myWords: string[] } | null>(null);
+  const [battleEnd, setBattleEnd] = useState<{ outcome: BattleOutcome; reward: number } | null>(null);
   const { todayIso, game } = world;
+  const zone = ZONES[CURRENT_ZONE - 1];
+  const me: PlayerInfo = { id: game.player.id, name: game.player.name, level: game.player.level, avatar: '🧑' };
 
   // 狀態有變就存檔（storage 內部已處理無法存取的情況）
   useEffect(() => {
@@ -91,12 +117,8 @@ export default function App() {
     window.scrollTo(0, 0);
   };
 
-  const startDaily = () => {
-    setQuest({ items: buildDailyQuest(QUESTIONS, game.progress, todayIso, CURRENT_ZONE), key: Date.now() });
-    go('quest');
-  };
-
-  const handleAnswer = (record: { word: string; correct: boolean } | undefined, xp: number) => {
+  /** 寫入一筆作答紀錄與經驗值（今日關卡、Boss、對戰共用） */
+  const applyAnswer = (record: { word: string; correct: boolean } | undefined, xp: number) => {
     setWorld((w) => ({
       ...w,
       game: {
@@ -104,6 +126,13 @@ export default function App() {
         player: xp > 0 ? withXp(w.game.player, xp) : w.game.player,
       },
     }));
+  };
+
+  // ───────── 今日關卡 ─────────
+
+  const startDaily = () => {
+    setQuest({ items: buildDailyQuest(QUESTIONS, game.progress, todayIso, CURRENT_ZONE), key: Date.now() });
+    go('quest');
   };
 
   const finishDaily = (summary: QuestSummary) => {
@@ -117,6 +146,54 @@ export default function App() {
     setQuest(null);
     go('result');
   };
+
+  // ───────── Boss 關 ─────────
+
+  const startBoss = () => {
+    setBoss({ questions: buildBossQuestions(QUESTIONS, CURRENT_ZONE), key: Date.now() });
+    go('boss');
+  };
+
+  const finishBoss = (won: boolean, bossHp: number) => {
+    const firstClear = won && !isZoneCleared(game.player.clearedStages, CURRENT_ZONE);
+    if (won) {
+      let player: Player = {
+        ...game.player,
+        clearedStages: clearStage(game.player.clearedStages, stageId(CURRENT_ZONE, BOSS_STAGE)),
+        badges: game.player.badges.includes(zone.badge) ? game.player.badges : [...game.player.badges, zone.badge],
+      };
+      if (firstClear) player = withXp(player, BOSS_FIRST_CLEAR_XP);
+      setWorld({ todayIso, game: { ...game, player } });
+    }
+    setBossEnd({ won, bossHp, firstClear });
+    setBoss(null);
+    go('bossResult');
+  };
+
+  // ───────── 對戰 ─────────
+
+  const startBotBattle = () => {
+    setBattle({
+      key: Date.now(),
+      createOpponent: () => new BotOpponent({ bank: QUESTIONS }),
+      myWords: forgetList(game.progress).map((p) => p.word),
+    });
+    go('battle');
+  };
+
+  const finishBattle = (outcome: BattleOutcome) => {
+    const reward = battleReward(outcome.myScore, outcome.oppScore);
+    setWorld((w) => ({ ...w, game: { ...w.game, player: withXp(w.game.player, reward) } }));
+    setBattleEnd({ outcome, reward });
+    setBattle(null);
+    go('battleResult');
+  };
+
+  const setName = (name: string) => {
+    setWorld({ todayIso, game: { ...game, player: { ...game.player, name, nameConfirmed: true } } });
+  };
+
+  // ───────── 展示用控制面板 ─────────
 
   const handleNextDay = () => {
     setOffsetDays(getOffsetDays() + 1);
@@ -177,11 +254,12 @@ export default function App() {
           toast={toast?.text ?? ''}
           toastKey={toast?.id ?? 0}
           onStartDaily={startDaily}
+          onStartBoss={startBoss}
           onNavigate={go}
         />
       )}
       {screen === 'quest' && quest && (
-        <Quest key={quest.key} items={quest.items} player={game.player} onAnswer={handleAnswer} onFinish={finishDaily} />
+        <Quest key={quest.key} items={quest.items} player={game.player} onAnswer={applyAnswer} onFinish={finishDaily} />
       )}
       {screen === 'result' && result && (
         <Result
@@ -192,7 +270,49 @@ export default function App() {
           onBattle={() => go('battleLobby')}
         />
       )}
-      {PLACEHOLDER_NOTE[screen] && <Placeholder note={PLACEHOLDER_NOTE[screen]!} onHome={() => go('home')} />}
+      {screen === 'boss' && boss && (
+        <Boss key={boss.key} questions={boss.questions} onAnswer={(r) => applyAnswer(r, 0)} onFinish={finishBoss} />
+      )}
+      {screen === 'bossResult' && bossEnd && (
+        <BossResult
+          won={bossEnd.won}
+          bossHp={bossEnd.bossHp}
+          zoneNo={zone.no}
+          badge={zone.badge}
+          firstClear={bossEnd.firstClear}
+          bonusXp={BOSS_FIRST_CLEAR_XP}
+          onHome={() => go('home')}
+          onRetry={startBoss}
+        />
+      )}
+      {screen === 'battleLobby' && (
+        <BattleLobby
+          player={game.player}
+          onSetName={setName}
+          onEditName={() => setWorld({ todayIso, game: { ...game, player: { ...game.player, nameConfirmed: false } } })}
+          onQuickMatch={startBotBattle}
+        />
+      )}
+      {screen === 'battle' && battle && (
+        <Battle
+          key={battle.key}
+          me={me}
+          myWords={battle.myWords}
+          createOpponent={battle.createOpponent}
+          onRecord={(word, correct) => applyAnswer({ word, correct }, 0)}
+          onFinish={finishBattle}
+          onLeave={() => go('home')}
+        />
+      )}
+      {screen === 'battleResult' && battleEnd && (
+        <BattleResult
+          me={me}
+          outcome={battleEnd.outcome}
+          reward={battleEnd.reward}
+          onHome={() => go('home')}
+          onRematch={() => go('battleLobby')}
+        />
+      )}
     </div>
   );
 }
