@@ -18,7 +18,7 @@
 
 **線上試玩：https://toeic-quest-swart.vercel.app**（用手機打開效果最好）
 
-**原始碼：https://github.com/Steven-Shih-0730/toeic-quest**
+**原始碼：https://github.com/Steven-Shih-0730/toeic-quest**（作者：施定宇 (Steven Shih)）
 
 給準備多益的大學生用的手機網頁 App：用情境題、間隔重複和遊戲化，解決「單字背了又忘、練習很無聊、撐不久」的問題。出自 2026/11/15「AI 時代青年實戰工作坊」提案。
 
