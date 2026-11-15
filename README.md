@@ -81,7 +81,7 @@ npm run test
    | --- | --- |
    | `VITE_SUPABASE_URL` | Supabase Project URL |
    | `VITE_SUPABASE_ANON_KEY` | Supabase publishable key 或 anon key |
-   | `VITE_SHOW_DEMO_PANEL` | `false`（正式網址隱藏展示用控制面板；工作坊展示時可改成 `true` 再重新部署） |
+   | `VITE_SHOW_DEMO_PANEL` | `true` 顯示展示用控制面板（目前線上版的設定，方便展示「模擬隔天」）；`false` 隱藏 |
 
 3. `VITE_` 開頭的變數會在建置時寫進前端程式，改了之後要重新部署才會生效。這兩個 Supabase 金鑰本來就是公開給瀏覽器用的，可以放在前端。
 
