@@ -31,7 +31,8 @@ TOEIC Quest 是給「準備多益的大學生」用的手機網頁 App。它用 
 - 正式網址：https://toeic-quest-swart.vercel.app（Vercel 專案 `toeic-quest`）
 - GitHub：https://github.com/Steven-Shih-0730/toeic-quest（已連上 Vercel：push 到 `master` 自動部署正式版，其他分支產生預覽版）
 - Supabase 專案：`toeic-quest`（東京，只用 Realtime，沒有資料表）
-- `VITE_SHOW_DEMO_PANEL=true`（正式版與預覽版都顯示齒輪，方便工作坊展示「模擬隔天」；要隱藏時在 Vercel 改成 `false` 再重新部署）
+- `VITE_SHOW_DEMO_PANEL=true`（正式版與預覽版都顯示齒輪，方便工作坊展示「模擬隔天」；要隱藏時在 Vercel 改成 `false`，再 push 一次或在 Vercel 後台按 Redeploy 才會生效）
+- 其他 Vercel 設定：GitHub 部署紀錄（`createDeployments`）已開啟，README 的部署狀態徽章靠它顯示
 - 部署保護：正式網址公開，預覽版需登入 Vercel
 
 ## 3. 技術棧
@@ -60,7 +61,11 @@ reference/demo.html        # artifact 做好的 demo（打包檔），不直接�
 reference/demo-source.html # demo 解開後的原始碼，開發時以這份為參考
 public/icons/              # PWA 圖示 PNG（深藍底、金色圓、⚔️，用 Chrome 算圖產生）
 docs/                      # 安裝用 QR code（Android、iOS 各一張）
+當日報告/                  # 工作坊當日的簡報（toeic-quest-slides.html）
+README.md                  # 專案介紹、本機啟動、部署
+PROMPTS.md                 # 分階段開發用的提示詞
 src/
+  types.ts                 # 共用型別（Question、WordProgress、Player 等）
   data/questions.ts        # 題庫
   data/seed.ts             # demo 用初始假資料
   data/zones.ts            # 5 區名稱與獎章
@@ -73,11 +78,14 @@ src/
   lib/rating.ts            # 對戰積分與排行榜
   lib/boss.ts              # Boss 關抽題與血量／生命
   lib/storage.ts           # localStorage 讀寫
+  lib/random.ts            # 洗牌與隨機抽樣（可注入亂數，方便測試）
+  lib/install.ts           # PWA 安裝引導：判斷平台、standalone、「之後再說」
   lib/battle/              # 對戰：types.ts（Opponent 介面）、engine.ts（房主規則）、host.ts（房主控場與計時）、
                            #   bot.ts（機器人）、realtime.ts（房間與連線對手）、supabaseClient.ts（Supabase 連線）
-  screens/                 # Home, Quest, Result, Boss, BossResult, BattleLobby, Battle, BattleResult
-  components/              # 共用元件：TopBar, DemoPanel, ProgressBar, ComboBanner, CoachHint, TimerRing ...
-tests/                     # Vitest
+  screens/                 # Home, Quest, Result, Boss, BossResult, BattleLobby, RoomView, Battle, BattleResult
+  components/              # 共用元件：TopBar, DemoPanel, AdventureMap, ForgetList, Leaderboard, InstallGuide,
+                           #   ProgressBar, ComboBanner, CoachHint, OptionButton, Stem, TimerRing
+tests/                     # Vitest（13 個檔案）
 ```
 
 ## 5. 資料模型
