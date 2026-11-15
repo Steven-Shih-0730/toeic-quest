@@ -2,15 +2,16 @@ import styles from './DemoPanel.module.css';
 
 interface Props {
   dateText: string;
-  bossUnlocked: boolean;
+  /** 5 區都已開放 */
+  allUnlocked: boolean;
   onNextDay: () => void;
   onReset: () => void;
-  onUnlockBoss: () => void;
+  onUnlockNextZone: () => void;
   onClose: () => void;
 }
 
 // 展示用控制面板（CLAUDE.md 第 7 節）。正式版在階段 6 用 VITE_SHOW_DEMO_PANEL 隱藏。
-export default function DemoPanel({ dateText, bossUnlocked, onNextDay, onReset, onUnlockBoss, onClose }: Props) {
+export default function DemoPanel({ dateText, allUnlocked, onNextDay, onReset, onUnlockNextZone, onClose }: Props) {
   return (
     <div className={styles.panel} role="dialog" aria-label="展示用控制面板">
       <div className={styles.heading}>展示用控制面板</div>
@@ -21,8 +22,8 @@ export default function DemoPanel({ dateText, bossUnlocked, onNextDay, onReset, 
       <button type="button" className={styles.danger} onClick={onReset}>
         🔄 重設 demo
       </button>
-      <button type="button" className={styles.secondary} onClick={onUnlockBoss} disabled={bossUnlocked}>
-        {bossUnlocked ? '✅ 本區 Boss 已解鎖' : '🔓 解鎖本區 Boss'}
+      <button type="button" className={styles.secondary} onClick={onUnlockNextZone} disabled={allUnlocked}>
+        {allUnlocked ? '✅ 5 區都已開放' : '🔓 解鎖下一區'}
       </button>
       <button type="button" className={styles.close} onClick={onClose}>
         關閉

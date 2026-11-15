@@ -10,6 +10,7 @@
   flex-direction: column;
   gap: 12px;
 }
+.zoneCleared { border-color: var(--gold); }
 
 .zoneHead { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .zoneName { font-weight: 900; font-size: 15px; }
@@ -29,11 +30,12 @@
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 10px 4px;
+  align-items: start;
 }
 
 .cell { display: flex; flex-direction: column; align-items: center; gap: 3px; }
 
-/* 節點四種狀態：done 已完成、today 今日、locked 上鎖、boss */
+/* 一般關卡：done 已完成（可重玩）、next 下一關、locked 上鎖 */
 .node {
   width: 52px;
   max-width: 100%;
@@ -51,8 +53,9 @@
 }
 
 .done { background: var(--green); border-color: var(--green); color: var(--green-text); }
+.done:active { transform: scale(0.94); }
 
-.today {
+.next {
   background: var(--gold);
   border-color: var(--gold-light);
   color: var(--gold-text);
@@ -61,11 +64,39 @@
 
 .locked { font-size: 16px; }
 
-.boss { background: var(--purple); border-color: var(--gold); color: #fff; font-size: 22px; }
-.boss:disabled { opacity: 0.75; }
-.cleared { background: var(--gold); border-color: var(--gold-light); opacity: 1; }
+/* Boss：比一般關卡大、紫底金框、持續發光 */
+.boss {
+  width: 62px;
+  margin-top: -5px;
+  background: radial-gradient(circle at 35% 30%, #6a3fa8, var(--purple) 70%);
+  border: 3px solid var(--gold);
+  color: #fff;
+  font-size: 28px;
+  animation: bossGlow 1.6s ease-in-out infinite;
+}
+.boss:active { transform: scale(0.94); }
+.bossCleared { background: var(--gold); border-color: var(--gold-light); animation: none; box-shadow: 0 0 14px rgba(255, 201, 60, 0.6); }
 
 .caption { font-size: 11px; color: var(--text-muted); height: 16px; white-space: nowrap; }
+.bossCaption { color: var(--gold-soft); font-weight: 900; }
+
+.bossBtn {
+  min-height: 56px;
+  border-radius: 14px;
+  border: 2px solid var(--gold);
+  background: linear-gradient(135deg, #3a1f5e, #2a1a4a);
+  color: var(--gold-soft);
+  font-size: 17px;
+  font-weight: 900;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  box-shadow: 0 4px 0 #1c0f33;
+}
+.bossBtn:active { transform: translateY(3px); box-shadow: 0 1px 0 #1c0f33; }
+.bossBtnNote { font-size: 12px; font-weight: 500; color: #e0d3ff; }
 
 .lockedZone {
   padding: 10px 12px;
@@ -95,4 +126,9 @@
 @keyframes blink {
   0%, 100% { box-shadow: 0 0 0 0 rgba(255, 201, 60, 0.85); transform: scale(1); }
   50% { box-shadow: 0 0 0 9px rgba(255, 201, 60, 0); transform: scale(1.08); }
+}
+
+@keyframes bossGlow {
+  0%, 100% { box-shadow: 0 0 6px 1px rgba(255, 201, 60, 0.55), 0 0 0 0 rgba(160, 110, 255, 0.6); }
+  50% { box-shadow: 0 0 18px 4px rgba(255, 201, 60, 0.9), 0 0 0 8px rgba(160, 110, 255, 0); }
 }

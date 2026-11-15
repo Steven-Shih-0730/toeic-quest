@@ -1,5 +1,6 @@
 // Boss 關（CLAUDE.md 6.5）。不得依賴 React。
 
+import { shuffle } from './random';
 import type { Question } from '../types';
 
 export const BOSS_HP = 3;
@@ -9,12 +10,7 @@ export const BOSS_QUESTION_COUNT = 5;
 /** 從該區的命題教授陷阱題隨機抽 5 題 */
 export function buildBossQuestions(bank: Question[], zone: number, rng: () => number = Math.random): Question[] {
   const traps = bank.filter((q) => q.zone === zone && q.tag === 'professor');
-  const shuffled = [...traps];
-  for (let i = shuffled.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(rng() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-  return shuffled.slice(0, BOSS_QUESTION_COUNT);
+  return shuffle(traps, rng).slice(0, BOSS_QUESTION_COUNT);
 }
 
 export interface BossSession {

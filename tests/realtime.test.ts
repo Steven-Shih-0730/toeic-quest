@@ -166,10 +166,15 @@ describe('RealtimeOpponent：連線對戰', () => {
     const hs = H.events[0] as Extract<BattleEvent, { type: 'start' }>;
     const gs = G.events[0] as Extract<BattleEvent, { type: 'start' }>;
     expect(gs).toEqual(hs);
-    const words = hs.questionIds.map((id) => QUESTIONS.find((q) => q.id === id)!.word);
-    expect(words.slice(0, 4)).toEqual(['reimburse', 'agenda', 'invoice', 'budget']);
-    expect(hs.sourceOf[hs.questionIds[0]]).toBe('A');
-    expect(hs.sourceOf[hs.questionIds[1]]).toBe('B');
+    // 出題順序會打亂，所以比對「哪些字、出自誰」
+    const wordsOf = (src: string) =>
+      hs.questionIds
+        .filter((id) => hs.sourceOf[id] === src)
+        .map((id) => QUESTIONS.find((q) => q.id === id)!.word)
+        .sort();
+    expect(wordsOf('A')).toEqual(['invoice', 'reimburse']);
+    expect(wordsOf('B')).toEqual(['agenda', 'budget']);
+    expect(hs.questionIds).toHaveLength(5);
   });
 
   it('打完 5 題：每題 reveal 與最後分數雙方一致（以房主計算為準）', async () => {

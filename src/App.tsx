@@ -11,20 +11,34 @@ import BossResult from './screens/BossResult';
 import Home from './screens/Home';
 import Quest from './screens/Quest';
 import Result from './screens/Result';
+import type { ResultMode } from './screens/Result';
 import { QUESTIONS } from './data/questions';
 import { createSeed } from './data/seed';
-import { CURRENT_ZONE, ZONES } from './data/zones';
+import { ZONES } from './data/zones';
 import { BOT_PROFILE, BotOpponent } from './lib/battle/bot';
 import { RealtimeRoom } from './lib/battle/realtime';
 import { getSupabase, supabaseRoomChannel } from './lib/battle/supabaseClient';
 import type { Opponent, PlayerInfo, ResumeInfo } from './lib/battle/types';
 import { buildBossQuestions } from './lib/boss';
 import { addDays, formatShortDate, getOffsetDays, setOffsetDays, today } from './lib/clock';
-import { buildDailyQuest } from './lib/quest';
+import { battleWordPool } from './lib/battle/engine';
+import { buildDailyQuest, buildStageQuest } from './lib/quest';
 import type { QuestItem, QuestSummary } from './lib/quest';
+import { applyRating, ratingDelta } from './lib/rating';
 import { BOSS_FIRST_CLEAR_XP, addXp, battleReward, completeDaily, refreshStreak } from './lib/scoring';
-import { dueWords, forgetList, recordAnswer } from './lib/srs';
-import { BOSS_STAGE, clearStage, isBossUnlocked, isZoneCleared, nextNormalStage, stageId, unlockBoss } from './lib/stages';
+import { dueWords, recordAnswer } from './lib/srs';
+import {
+  BOSS_STAGE,
+  ZONE_COUNT,
+  allZonesUnlocked,
+  clearStage,
+  frontierZone,
+  isZoneCleared,
+  nextNormalStage,
+  stageId,
+  unlockNextZone,
+  unlockedZones,
+} from './lib/stages';
 import { clearSave, loadSave, writeSave } from './lib/storage';
 import type { GameState, Player, Question } from './types';
 
@@ -82,6 +96,7 @@ interface Toast {
 }
 
 interface BossEnd {
+  zone: number;
   won: boolean;
   bossHp: number;
   firstClear: boolean;
@@ -92,9 +107,10 @@ export default function App() {
   const [screen, setScreen] = useState<Screen>('home');
   const [panelOpen, setPanelOpen] = useState(false);
   const [toast, setToast] = useState<Toast | null>(null);
-  const [quest, setQuest] = useState<{ items: QuestItem[]; key: number } | null>(null);
-  const [result, setResult] = useState<{ summary: QuestSummary; streakUp: boolean } | null>(null);
-  const [boss, setBoss] = useState<{ questions: Question[]; key: number } | null>(null);
+  // 今日關卡（zone/stage 為空）或地圖關卡
+  const [quest, setQuest] = useState<{ items: QuestItem[]; key: number; zone?: number; stage?: number } | null>(null);
+  const [result, setResult] = useState<{ summary: QuestSummary; mode: ResultMode } | null>(null);
+  const [boss, setBoss] = useState<{ questions: Question[]; key: number; zone: number } | null>(null);
   const [bossEnd, setBossEnd] = useState<BossEnd | null>(null);
   const [battle, setBattle] = useState<{
     key: number;
@@ -103,9 +119,13 @@ export default function App() {
     createFallback?: (resume: ResumeInfo) => Opponent;
     myWords: string[];
   } | null>(null);
-  const [battleEnd, setBattleEnd] = useState<{ me: PlayerInfo; outcome: BattleOutcome; reward: number } | null>(null);
+  const [battleEnd, setBattleEnd] = useState<{
+    me: PlayerInfo;
+    outcome: BattleOutcome;
+    reward: number;
+    rating: { before: number; after: number };
+  } | null>(null);
   const { todayIso, game } = world;
-  const zone = ZONES[CURRENT_ZONE - 1];
   const me: PlayerInfo = { id: game.player.id, name: game.player.name, level: game.player.level, avatar: '🧑' };
 
   // 狀態有變就存檔（storage 內部已處理無法存取的情況）
@@ -142,48 +162,64 @@ export default function App() {
   // ───────── 今日關卡 ─────────
 
   const startDaily = () => {
-    setQuest({ items: buildDailyQuest(QUESTIONS, game.progress, todayIso, CURRENT_ZONE), key: Date.now() });
+    setQuest({
+      items: buildDailyQuest(QUESTIONS, game.progress, todayIso, unlockedZones(game.player.clearedStages)),
+      key: Date.now(),
+    });
     go('quest');
   };
 
-  const finishDaily = (summary: QuestSummary) => {
-    // 同一天第一次完成：連續天數 +1，並推進一關
-    const { player, streakUp } = completeDaily(game.player, todayIso);
-    let cleared = player.clearedStages;
-    const next = nextNormalStage(cleared, CURRENT_ZONE);
-    if (streakUp && next !== undefined) cleared = clearStage(cleared, stageId(CURRENT_ZONE, next));
-    setWorld({ todayIso, game: { ...game, player: { ...player, clearedStages: cleared } } });
-    setResult({ summary, streakUp });
+  const startStage = (zone: number, stage: number) => {
+    setQuest({ items: buildStageQuest(QUESTIONS, game.progress, todayIso, zone), key: Date.now(), zone, stage });
+    go('quest');
+  };
+
+  const finishQuest = (summary: QuestSummary) => {
+    if (quest?.zone !== undefined && quest.stage !== undefined) {
+      // 地圖關卡：作答完就通過，不影響連續天數
+      const { zone, stage } = quest;
+      const cleared = clearStage(game.player.clearedStages, stageId(zone, stage));
+      setWorld({ todayIso, game: { ...game, player: { ...game.player, clearedStages: cleared } } });
+      setResult({ summary, mode: { kind: 'stage', zone, stage, nextStage: nextNormalStage(cleared, zone) } });
+    } else {
+      // 今日關卡：同一天第一次完成，連續天數 +1；不推進地圖
+      const { player, streakUp } = completeDaily(game.player, todayIso);
+      setWorld({ todayIso, game: { ...game, player } });
+      setResult({ summary, mode: { kind: 'daily', streakUp } });
+    }
     setQuest(null);
     go('result');
   };
 
   // ───────── Boss 關 ─────────
 
-  const startBoss = () => {
-    setBoss({ questions: buildBossQuestions(QUESTIONS, CURRENT_ZONE), key: Date.now() });
+  const startBoss = (zone: number) => {
+    setBoss({ questions: buildBossQuestions(QUESTIONS, zone), key: Date.now(), zone });
     go('boss');
   };
 
   const finishBoss = (won: boolean, bossHp: number) => {
-    const firstClear = won && !isZoneCleared(game.player.clearedStages, CURRENT_ZONE);
+    const zone = boss?.zone ?? 1;
+    const zoneInfo = ZONES[zone - 1];
+    const firstClear = won && !isZoneCleared(game.player.clearedStages, zone);
     if (won) {
       let player: Player = {
         ...game.player,
-        clearedStages: clearStage(game.player.clearedStages, stageId(CURRENT_ZONE, BOSS_STAGE)),
-        badges: game.player.badges.includes(zone.badge) ? game.player.badges : [...game.player.badges, zone.badge],
+        clearedStages: clearStage(game.player.clearedStages, stageId(zone, BOSS_STAGE)),
+        badges: game.player.badges.includes(zoneInfo.badge) ? game.player.badges : [...game.player.badges, zoneInfo.badge],
       };
       if (firstClear) player = withXp(player, BOSS_FIRST_CLEAR_XP);
       setWorld({ todayIso, game: { ...game, player } });
     }
-    setBossEnd({ won, bossHp, firstClear });
+    setBossEnd({ zone, won, bossHp, firstClear });
     setBoss(null);
     go('bossResult');
   };
 
   // ───────── 對戰 ─────────
 
-  const myForgetWords = () => forgetList(game.progress).map((p) => p.word);
+  // 對戰用的快忘字：到期優先、同組隨機（CLAUDE.md 6.6）
+  const myForgetWords = () => battleWordPool(game.progress, todayIso);
 
   const startBotBattle = () => {
     setBattle({
@@ -223,8 +259,10 @@ export default function App() {
 
   const finishBattle = (outcome: BattleOutcome) => {
     const reward = battleReward(outcome.myScore, outcome.oppScore);
-    setWorld((w) => ({ ...w, game: { ...w.game, player: withXp(w.game.player, reward) } }));
-    setBattleEnd({ me: battle?.me ?? me, outcome, reward });
+    const before = applyRating(game.player.rating, 0);
+    const after = applyRating(game.player.rating, ratingDelta(outcome.myScore, outcome.oppScore));
+    setWorld((w) => ({ ...w, game: { ...w.game, player: { ...withXp(w.game.player, reward), rating: after } } }));
+    setBattleEnd({ me: battle?.me ?? me, outcome, reward, rating: { before, after } });
     setBattle(null);
     go('battleResult');
   };
@@ -257,12 +295,11 @@ export default function App() {
     go('home');
   };
 
-  const handleUnlockBoss = () => {
-    setWorld({
-      todayIso,
-      game: { ...game, player: { ...game.player, clearedStages: unlockBoss(game.player.clearedStages, CURRENT_ZONE) } },
-    });
-    showToast(`已解鎖第 ${CURRENT_ZONE} 區 Boss：第 1～9 關設為完成。`, 4000);
+  const handleUnlockNextZone = () => {
+    const cleared = unlockNextZone(game.player.clearedStages);
+    setWorld({ todayIso, game: { ...game, player: { ...game.player, clearedStages: cleared } } });
+    const z = frontierZone(cleared);
+    showToast(`已解鎖第 ${z} 區「${ZONES[z - 1].name}」。`, 4000);
     go('home');
   };
 
@@ -270,7 +307,13 @@ export default function App() {
     <div className={styles.frame}>
       <div className={styles.header}>
         <TopBar
-          title={TITLES[screen]}
+          title={
+            screen === 'quest' && quest?.zone !== undefined
+              ? `第 ${quest.zone} 區 第 ${quest.stage} 關`
+              : screen === 'boss' && boss
+                ? `第 ${boss.zone} 區 Boss：命題教授`
+                : TITLES[screen]
+          }
           showBack={screen !== 'home'}
           onBack={() => go('home')}
           onToggleSettings={SHOW_DEMO_PANEL ? () => setPanelOpen((v) => !v) : undefined}
@@ -278,10 +321,10 @@ export default function App() {
         {SHOW_DEMO_PANEL && panelOpen && (
           <DemoPanel
             dateText={formatShortDate(todayIso)}
-            bossUnlocked={isBossUnlocked(game.player.clearedStages, CURRENT_ZONE)}
+            allUnlocked={allZonesUnlocked(game.player.clearedStages)}
             onNextDay={handleNextDay}
             onReset={handleReset}
-            onUnlockBoss={handleUnlockBoss}
+            onUnlockNextZone={handleUnlockNextZone}
             onClose={() => setPanelOpen(false)}
           />
         )}
@@ -294,20 +337,26 @@ export default function App() {
           toast={toast?.text ?? ''}
           toastKey={toast?.id ?? 0}
           onStartDaily={startDaily}
+          onStartStage={startStage}
           onStartBoss={startBoss}
           onNavigate={go}
         />
       )}
       {screen === 'quest' && quest && (
-        <Quest key={quest.key} items={quest.items} player={game.player} onAnswer={applyAnswer} onFinish={finishDaily} />
+        <Quest key={quest.key} items={quest.items} player={game.player} onAnswer={applyAnswer} onFinish={finishQuest} />
       )}
       {screen === 'result' && result && (
         <Result
           summary={result.summary}
           player={game.player}
-          streakUp={result.streakUp}
+          mode={result.mode}
           onHome={() => go('home')}
           onBattle={() => go('battleLobby')}
+          onNextStage={() => {
+            if (result.mode.kind === 'stage' && result.mode.nextStage !== undefined) {
+              startStage(result.mode.zone, result.mode.nextStage);
+            }
+          }}
         />
       )}
       {screen === 'boss' && boss && (
@@ -317,12 +366,15 @@ export default function App() {
         <BossResult
           won={bossEnd.won}
           bossHp={bossEnd.bossHp}
-          zoneNo={zone.no}
-          badge={zone.badge}
+          zoneNo={bossEnd.zone}
+          badge={ZONES[bossEnd.zone - 1].badge}
           firstClear={bossEnd.firstClear}
           bonusXp={BOSS_FIRST_CLEAR_XP}
+          unlocked={
+            bossEnd.won && bossEnd.zone < ZONE_COUNT ? { no: bossEnd.zone + 1, name: ZONES[bossEnd.zone].name } : undefined
+          }
           onHome={() => go('home')}
-          onRetry={startBoss}
+          onRetry={() => startBoss(bossEnd.zone)}
         />
       )}
       {screen === 'battleLobby' && (
@@ -353,6 +405,7 @@ export default function App() {
           me={battleEnd.me}
           outcome={battleEnd.outcome}
           reward={battleEnd.reward}
+          rating={battleEnd.rating}
           onHome={() => go('home')}
           onRematch={() => go('battleLobby')}
         />

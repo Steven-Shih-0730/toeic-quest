@@ -4,12 +4,18 @@ import type { QuestSummary } from '../lib/quest';
 import { XP_PER_LEVEL } from '../lib/scoring';
 import type { Player } from '../types';
 
+/** 今日關卡：顯示連續天數；地圖關卡：顯示通過的關卡與「下一關」 */
+export type ResultMode =
+  | { kind: 'daily'; streakUp: boolean }
+  | { kind: 'stage'; zone: number; stage: number; nextStage?: number };
+
 interface Props {
   summary: QuestSummary;
   player: Player;
-  streakUp: boolean;
+  mode: ResultMode;
   onHome: () => void;
   onBattle: () => void;
+  onNextStage: () => void;
 }
 
 /** 寢室排行榜：本版為假資料（CLAUDE.md 第 10 節），你的分數 = 假基準 + 這關經驗值 */
@@ -19,14 +25,16 @@ const FRIENDS = [
   { name: '小華', icon: '🤓', xp: 1105 },
 ];
 
-export default function Result({ summary, player, streakUp, onHome, onBattle }: Props) {
+export default function Result({ summary, player, mode, onHome, onBattle, onNextStage }: Props) {
   const board = [{ name: `你（${player.name}）`, icon: '🧑', xp: MY_WEEK_BASE + summary.xp, me: true }, ...FRIENDS.map((f) => ({ ...f, me: false }))].sort(
     (a, b) => b.xp - a.xp,
   );
 
   return (
     <main className={styles.page}>
-      <h2 className={styles.title}>🎉 關卡完成！</h2>
+      <h2 className={styles.title}>
+        {mode.kind === 'stage' ? `🎉 第 ${mode.zone} 區 第 ${mode.stage} 關 通過！` : '🎉 今日關卡完成！'}
+      </h2>
 
       <div className={styles.stats}>
         <div className={styles.stat}>
@@ -39,13 +47,25 @@ export default function Result({ summary, player, streakUp, onHome, onBattle }: 
           <div className={styles.label}>獲得經驗值</div>
           <div className={`${styles.value} ${styles.gold}`}>+{summary.xp}</div>
         </div>
-        <div className={styles.stat}>
-          <div className={styles.label}>連續天數</div>
-          <div className={styles.value}>
-            🔥 <span className={streakUp ? styles.bump : styles.streakNum}>{player.streakDays}</span>
+        {mode.kind === 'daily' ? (
+          <div className={styles.stat}>
+            <div className={styles.label}>連續天數</div>
+            <div className={styles.value}>
+              🔥 <span className={mode.streakUp ? styles.bump : styles.streakNum}>{player.streakDays}</span>
+            </div>
+            <div className={styles.streakNote}>{mode.streakUp ? '連續天數 +1！' : '今天已計入'}</div>
           </div>
-          <div className={styles.streakNote}>{streakUp ? '連續天數 +1！' : '今天已計入'}</div>
-        </div>
+        ) : (
+          <div className={styles.stat}>
+            <div className={styles.label}>冒險地圖</div>
+            <div className={styles.value}>
+              <span className={styles.bump}>✅</span>
+            </div>
+            <div className={styles.streakNote}>
+              第 {mode.zone}-{mode.stage} 關
+            </div>
+          </div>
+        )}
       </div>
 
       <div className={styles.levelRow}>
@@ -95,6 +115,12 @@ export default function Result({ summary, player, streakUp, onHome, onBattle }: 
           </div>
         ))}
       </section>
+
+      {mode.kind === 'stage' && mode.nextStage !== undefined && (
+        <button type="button" className={styles.nextBtn} onClick={onNextStage}>
+          下一關：第 {mode.zone} 區 第 {mode.nextStage} 關 →
+        </button>
+      )}
 
       <div className={styles.actions}>
         <button type="button" className={styles.homeBtn} onClick={onHome}>

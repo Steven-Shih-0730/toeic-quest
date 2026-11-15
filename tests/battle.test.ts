@@ -1,10 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { QUESTIONS } from '../src/data/questions';
-import { BOT_DUE_WORDS, BOT_PROFILE, BotOpponent } from '../src/lib/battle/bot';
+import { BOT_PROFILE, BOT_WORD_COUNT, BotOpponent, botWords } from '../src/lib/battle/bot';
 import {
   QUESTION_MS,
   REVEAL_MS,
   advance,
+  battleWordPool,
   beginQuestion,
   createEngine,
   pickBattleQuestions,
@@ -12,47 +13,75 @@ import {
   submitAnswer,
 } from '../src/lib/battle/engine';
 import type { BattleEvent } from '../src/lib/battle/types';
+import type { WordProgress } from '../src/types';
 
 const byId = new Map(QUESTIONS.map((q) => [q.id, q]));
 const wordOf = (id: string) => byId.get(id)!.word;
 const ME = { id: 'me', name: '小陳', level: 3, avatar: '🧑' };
 
-describe('pickBattleQuestions：選題', () => {
-  it('第 1、3、5 題放我的字（最多 3 題），第 2、4 題放對手的字，並標示來源', () => {
-    const r = pickBattleQuestions({
-      bank: QUESTIONS,
-      me: { id: 'me', words: ['reimburse', 'invoice', 'itinerary', 'deadline'] },
-      opponent: { id: 'bot', words: BOT_DUE_WORDS },
-    });
-    expect(r.questionIds.map(wordOf)).toEqual(['reimburse', 'postpone', 'invoice', 'warranty', 'itinerary']);
-    expect(r.questionIds.map((id) => r.sourceOf[id])).toEqual(['me', 'bot', 'me', 'bot', 'me']);
+describe('pickBattleQuestions：選題與隨機性（6.6）', () => {
+  const pick = (myWords: string[], oppWords: string[], rng?: () => number) =>
+    pickBattleQuestions({ bank: QUESTIONS, me: { id: 'me', words: myWords }, opponent: { id: 'bot', words: oppWords }, rng });
+
+  it('我的字最多 3 題、對手的字補到 5 題，來源標示正確', () => {
+    const r = pick(['reimburse', 'invoice', 'itinerary', 'deadline'], ['postpone', 'warranty', 'agenda']);
+    const bySource = (src: string) => r.questionIds.filter((id) => r.sourceOf[id] === src).map(wordOf).sort();
+    expect(bySource('me')).toEqual(['invoice', 'itinerary', 'reimburse']);
+    expect(bySource('bot')).toEqual(['postpone', 'warranty']);
   });
 
-  it('我的清單不夠時由對手的字補上', () => {
-    const r = pickBattleQuestions({
-      bank: QUESTIONS,
-      me: { id: 'me', words: ['reimburse'] },
-      opponent: { id: 'bot', words: BOT_DUE_WORDS },
-    });
-    expect(r.questionIds.map(wordOf)).toEqual(['reimburse', 'postpone', 'warranty', 'negotiate', 'agenda']);
-  });
-
-  it('雙方清單重複的字只出一次', () => {
-    const r = pickBattleQuestions({
-      bank: QUESTIONS,
-      me: { id: 'me', words: ['postpone'] },
-      opponent: { id: 'bot', words: ['postpone', 'agenda'] },
-      rng: () => 0,
-    });
+  it('我的清單不夠時由對手的字補上；雙方重複的字只出一次', () => {
+    const r = pick(['postpone'], ['postpone', 'agenda', 'venue', 'minutes', 'audit']);
     expect(new Set(r.questionIds).size).toBe(5);
-    expect(r.sourceOf[r.questionIds[0]]).toBe('me');
+    expect(r.sourceOf[QUESTIONS.find((q) => q.word === 'postpone')!.id]).toBe('me');
+    expect(r.questionIds.filter((id) => r.sourceOf[id] === 'bot')).toHaveLength(4);
   });
 
-  it('兩邊都不夠 5 題時，從題庫隨機補（沒有來源標示）', () => {
-    const r = pickBattleQuestions({ bank: QUESTIONS, me: { id: 'me', words: [] }, opponent: { id: 'bot', words: ['agenda'] }, rng: () => 0 });
+  it('兩邊都不夠 5 題時，從整個題庫隨機補（沒有來源標示）', () => {
+    const r = pick([], ['agenda'], () => 0);
     expect(r.questionIds).toHaveLength(5);
     expect(new Set(r.questionIds).size).toBe(5);
     expect(Object.keys(r.sourceOf)).toHaveLength(1);
+  });
+
+  it('出題順序會打亂：同樣的清單打 30 場，至少出現 5 種不同順序', () => {
+    const orders = new Set<string>();
+    for (let i = 0; i < 30; i += 1) orders.add(pick(['reimburse', 'invoice', 'itinerary'], ['postpone', 'warranty']).questionIds.join());
+    expect(orders.size).toBeGreaterThanOrEqual(5);
+  });
+
+  it('隨機補題來自整個題庫（5 個區域都有機會）', () => {
+    const zones = new Set<number>();
+    for (let i = 0; i < 40; i += 1) pick([], []).questionIds.forEach((id) => zones.add(byId.get(id)!.zone));
+    expect(zones.size).toBe(5);
+  });
+
+  it('機器人每場隨機抽 8 個字，而且不會抽到我清單裡的字', () => {
+    const a = botWords(QUESTIONS, Math.random, ['reimburse']);
+    expect(a).toHaveLength(BOT_WORD_COUNT);
+    expect(new Set(a).size).toBe(BOT_WORD_COUNT);
+    expect(a).not.toContain('reimburse');
+    const seen = new Set<string>();
+    for (let i = 0; i < 10; i += 1) botWords(QUESTIONS).forEach((w) => seen.add(w));
+    expect(seen.size).toBeGreaterThan(BOT_WORD_COUNT * 3);
+  });
+});
+
+describe('battleWordPool：我的快忘字順序', () => {
+  it('只取快忘清單；到期的字一定排在未到期的前面', () => {
+    const progress: WordProgress[] = [
+      { word: 'budget', wrongCount: 0, correctStreak: 1, nextReview: '2026-11-10', mastered: false }, // 沒答錯過，不算快忘字
+      { word: 'agenda', wrongCount: 1, correctStreak: 1, nextReview: '2026-11-20', mastered: false },
+      { word: 'reimburse', wrongCount: 1, correctStreak: 0, nextReview: '2026-11-14', mastered: false },
+      { word: 'invoice', wrongCount: 2, correctStreak: 0, nextReview: '2026-11-15', mastered: false },
+      { word: 'lend', wrongCount: 1, correctStreak: 3, nextReview: '2026-11-01', mastered: true },
+    ];
+    for (let i = 0; i < 10; i += 1) {
+      const pool = battleWordPool(progress, '2026-11-15');
+      expect(pool).toHaveLength(3);
+      expect(pool.slice(0, 2).sort()).toEqual(['invoice', 'reimburse']);
+      expect(pool[2]).toBe('agenda');
+    }
   });
 });
 

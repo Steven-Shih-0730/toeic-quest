@@ -1,7 +1,10 @@
 // 房主規則（CLAUDE.md 6.6、8.1）：選題、作答、計分。純函式、不碰計時器，機器人與真人房主共用。
 
+import { shuffle } from '../random';
+import type { Rng } from '../random';
 import { BATTLE_SECONDS, battleScore, nextCombo } from '../scoring';
-import type { Question } from '../../types';
+import { forgetList, isDue } from '../srs';
+import type { Question, WordProgress } from '../../types';
 
 export const QUESTION_MS = BATTLE_SECONDS * 1000;
 export const REVEAL_MS = 2000;
@@ -10,16 +13,27 @@ export const MAX_MY_WORDS = 3;
 
 // ───────── 選題 ─────────
 
+/**
+ * 對戰用的快忘字順序：整份快忘清單，到期的字優先，但同一組內隨機（CLAUDE.md 6.6）。
+ * 每位玩家在自己的裝置上算好，連線時放在 ready 訊息裡送給房主。
+ */
+export function battleWordPool(progress: WordProgress[], todayIso: string, rng: Rng = Math.random): string[] {
+  const list = forgetList(progress);
+  const due = list.filter((p) => isDue(p, todayIso)).map((p) => p.word);
+  const later = list.filter((p) => !isDue(p, todayIso)).map((p) => p.word);
+  return [...shuffle(due, rng), ...shuffle(later, rng)];
+}
+
 export interface PickInput {
   bank: Question[];
   me: { id: string; words: string[] };
   opponent: { id: string; words: string[] };
-  rng?: () => number;
+  rng?: Rng;
 }
 
 /**
- * 第 1、3、5 題優先放我的字（最多 3 題），其餘放對手的字；不夠時從題庫隨機補。
- * words 請依優先順序排好（到期的在前）。
+ * 選 5 題：我的字最多 3 題（依 words 的順序），對手的字補到 5 題，
+ * 兩邊不夠時從整個題庫隨機補；最後打亂出題順序。
  */
 export function pickBattleQuestions({ bank, me, opponent, rng = Math.random }: PickInput): {
   questionIds: string[];
@@ -27,41 +41,29 @@ export function pickBattleQuestions({ bank, me, opponent, rng = Math.random }: P
 } {
   const byWord = new Map(bank.map((q) => [q.word, q]));
   const used = new Set<string>();
-  const toQs = (words: string[]) =>
-    words.map((w) => byWord.get(w)).filter((q): q is Question => !!q);
-
-  const mine = toQs(me.words).slice(0, MAX_MY_WORDS);
-  mine.forEach((q) => used.add(q.id));
-  const theirs = toQs(opponent.words).filter((q) => !used.has(q.id));
-
-  const questionIds: string[] = [];
   const sourceOf: Record<string, string> = {};
-  let a = 0;
-  let b = 0;
-  while (questionIds.length < BATTLE_SIZE && (a < mine.length || b < theirs.length)) {
-    const wantMine = questionIds.length % 2 === 0;
-    let q: Question | undefined;
-    let src = '';
-    if ((wantMine && a < mine.length) || b >= theirs.length) {
-      q = mine[a++];
-      src = me.id;
-    } else {
-      q = theirs[b++];
-      src = opponent.id;
-    }
-    if (q) {
-      questionIds.push(q.id);
-      sourceOf[q.id] = src;
-      used.add(q.id);
-    }
-  }
+  const picked: Question[] = [];
+  const take = (q: Question, src?: string) => {
+    picked.push(q);
+    used.add(q.id);
+    if (src) sourceOf[q.id] = src;
+  };
 
-  const rest = bank.filter((q) => !used.has(q.id));
-  while (questionIds.length < BATTLE_SIZE && rest.length) {
-    const [q] = rest.splice(Math.floor(rng() * rest.length), 1);
-    questionIds.push(q.id);
+  for (const w of me.words) {
+    if (picked.length >= MAX_MY_WORDS) break;
+    const q = byWord.get(w);
+    if (q && !used.has(q.id)) take(q, me.id);
   }
-  return { questionIds, sourceOf };
+  for (const w of opponent.words) {
+    if (picked.length >= BATTLE_SIZE) break;
+    const q = byWord.get(w);
+    if (q && !used.has(q.id)) take(q, opponent.id);
+  }
+  for (const q of shuffle(bank.filter((x) => !used.has(x.id)), rng)) {
+    if (picked.length >= BATTLE_SIZE) break;
+    take(q);
+  }
+  return { questionIds: shuffle(picked, rng).map((q) => q.id), sourceOf };
 }
 
 // ───────── 進行 ─────────

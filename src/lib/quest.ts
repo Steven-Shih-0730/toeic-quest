@@ -34,19 +34,24 @@ function byFillPriority(progress: WordProgress[]) {
   };
 }
 
-export function buildDailyQuest(
+/**
+ * 共同出題規則（CLAUDE.md 6.2）：
+ * includeDue 時先放到期複習字（最多 2 題，任何區域的字都算），第 4 題面試官題，其餘依優先順序補一般題。
+ */
+function buildQuest(
   bank: Question[],
   progress: WordProgress[],
   todayIso: string,
-  zone: number,
+  zones: number[],
+  includeDue: boolean,
 ): QuestItem[] {
-  const zoneQs = bank.filter((q) => q.zone === zone);
-  const byWord = new Map(zoneQs.map((q) => [q.word, q]));
+  const zoneQs = bank.filter((q) => zones.includes(q.zone));
+  const byWord = new Map(bank.map((q) => [q.word, q]));
   const used = new Set<string>();
 
   // 1. 到期複習題，最多 2 題
   const review: QuestItem[] = [];
-  for (const p of dueWords(progress, todayIso)) {
+  for (const p of includeDue ? dueWords(progress, todayIso) : []) {
     if (review.length >= MAX_DUE) break;
     const q = byWord.get(p.word);
     if (!q) continue;
@@ -72,6 +77,26 @@ export function buildDailyQuest(
   const items = [...review, ...fill];
   if (interviewer) items.splice(Math.min(INTERVIEWER_INDEX, items.length), 0, { question: interviewer });
   return items;
+}
+
+/** 今日關卡（每日複習）：範圍是所有已開放區域，先放到期字 */
+export function buildDailyQuest(
+  bank: Question[],
+  progress: WordProgress[],
+  todayIso: string,
+  zones: number[],
+): QuestItem[] {
+  return buildQuest(bank, progress, todayIso, zones, true);
+}
+
+/** 地圖關卡：範圍是該區，不放到期字 */
+export function buildStageQuest(
+  bank: Question[],
+  progress: WordProgress[],
+  todayIso: string,
+  zone: number,
+): QuestItem[] {
+  return buildQuest(bank, progress, todayIso, [zone], false);
 }
 
 /** 「🔁 N 天前答錯」標籤文字 */

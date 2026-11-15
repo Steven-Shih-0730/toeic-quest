@@ -16,7 +16,8 @@ interface Props {
   toast: string;
   toastKey: number;
   onStartDaily: () => void;
-  onStartBoss: () => void;
+  onStartStage: (zone: number, stage: number) => void;
+  onStartBoss: (zone: number) => void;
   onNavigate: (screen: Screen) => void;
 }
 
@@ -27,7 +28,7 @@ function dailyNote(game: GameState, todayIso: string): string {
   return '5 題・約 3 分鐘';
 }
 
-export default function Home({ game, todayIso, toast, toastKey, onStartDaily, onStartBoss, onNavigate }: Props) {
+export default function Home({ game, todayIso, toast, toastKey, onStartDaily, onStartStage, onStartBoss, onNavigate }: Props) {
   const { player, progress } = game;
 
   return (
@@ -66,13 +67,6 @@ export default function Home({ game, todayIso, toast, toastKey, onStartDaily, on
         </div>
       </section>
 
-      <AdventureMap
-        player={player}
-        todayIso={todayIso}
-        onStartDaily={onStartDaily}
-        onStartBoss={onStartBoss}
-      />
-
       <div className={styles.actions}>
         <button type="button" className={styles.dailyBtn} onClick={onStartDaily}>
           <span>⚔️ 今日關卡</span>
@@ -83,6 +77,8 @@ export default function Home({ game, todayIso, toast, toastKey, onStartDaily, on
           <span className={styles.btnNote}>互考彼此的快忘字</span>
         </button>
       </div>
+
+      <AdventureMap player={player} onStartStage={onStartStage} onStartBoss={onStartBoss} />
 
       <ForgetList progress={progress} todayIso={todayIso} />
     </main>

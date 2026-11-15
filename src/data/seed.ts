@@ -19,6 +19,7 @@ export function createSeed(today: string): GameState {
       lastActiveDate: addDays(today, -1),
       clearedStages: [1, 2, 3, 4, 5, 6],
       badges: [],
+      rating: 420,
     },
     // 以下歷程是示意用的假資料，只保證到期日落在規格要求的日子
     progress: [

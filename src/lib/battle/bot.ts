@@ -2,13 +2,22 @@
 
 import { QUESTION_MS, pickBattleQuestions } from './engine';
 import { HostRunner } from './host';
+import { sample } from '../random';
 import type { BattleEvent, BattleListener, Opponent, PlayerInfo, ResumeInfo } from './types';
 import type { Question } from '../../types';
 
 export const BOT_PROFILE: PlayerInfo = { id: 'bot-aming', name: '阿明', level: 4, avatar: '😎' };
 
-/** 阿明的快忘清單（固定） */
-export const BOT_DUE_WORDS = ['postpone', 'warranty', 'negotiate', 'agenda', 'shipment', 'approve', 'renovation', 'attendee'];
+/** 阿明的快忘清單：每場從題庫隨機抽 8 個字（CLAUDE.md 6.6） */
+export const BOT_WORD_COUNT = 8;
+
+export function botWords(bank: Question[], rng: () => number = Math.random, exclude: string[] = []): string[] {
+  return sample(
+    bank.map((q) => q.word).filter((w) => !exclude.includes(w)),
+    BOT_WORD_COUNT,
+    rng,
+  );
+}
 
 export interface BotOptions {
   bank: Question[];
@@ -50,7 +59,7 @@ export class BotOpponent implements Opponent {
       pickBattleQuestions({
         bank,
         me: { id: me.id, words: me.dueWords },
-        opponent: { id: this.profile.id, words: BOT_DUE_WORDS },
+        opponent: { id: this.profile.id, words: botWords(bank, rng, me.dueWords) },
         rng,
       });
 

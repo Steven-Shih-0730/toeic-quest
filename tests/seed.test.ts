@@ -40,12 +40,24 @@ describe('首頁查詢函式（srs 的唯讀部分）', () => {
 });
 
 describe('題庫格式', () => {
-  it('共 25 題：一般 15、面試官 4、命題教授 6', () => {
-    expect(QUESTIONS).toHaveLength(25);
-    const general = QUESTIONS.filter((q) => ['email', 'notice', 'meeting'].includes(q.tag));
-    expect(general).toHaveLength(15);
-    expect(QUESTIONS.filter((q) => q.tag === 'interviewer')).toHaveLength(4);
-    expect(QUESTIONS.filter((q) => q.tag === 'professor')).toHaveLength(6);
+  it('共 100 題：5 區各 20 題（一般 11、面試官 3、命題教授 6）', () => {
+    expect(QUESTIONS).toHaveLength(100);
+    for (let zone = 1; zone <= 5; zone += 1) {
+      const zq = QUESTIONS.filter((q) => q.zone === zone);
+      expect(zq, `第 ${zone} 區`).toHaveLength(20);
+      expect(zq.filter((q) => ['email', 'notice', 'meeting'].includes(q.tag))).toHaveLength(11);
+      expect(zq.filter((q) => q.tag === 'interviewer')).toHaveLength(3);
+      expect(zq.filter((q) => q.tag === 'professor')).toHaveLength(6);
+    }
+  });
+
+  it('id 前綴與區域一致；選項不重複；提示不直接寫出正解', () => {
+    for (const q of QUESTIONS) {
+      expect(q.id.startsWith(`z${q.zone}-`), q.id).toBe(true);
+      expect(new Set(q.options).size, q.id).toBe(4);
+      expect(q.hint.toLowerCase().includes(q.options[q.answer].toLowerCase()), q.id).toBe(false);
+      expect(q.explanation.length, q.id).toBeGreaterThan(10);
+    }
   });
 
   it('每題 id、word 唯一，題目恰好一個 ____，正解選項就是目標字的變化形', () => {

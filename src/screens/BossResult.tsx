@@ -7,11 +7,13 @@ interface Props {
   badge: string;
   firstClear: boolean;
   bonusXp: number;
+  /** 打倒後解鎖的下一區（第 5 區沒有） */
+  unlocked?: { no: number; name: string };
   onHome: () => void;
   onRetry: () => void;
 }
 
-export default function BossResult({ won, bossHp, zoneNo, badge, firstClear, bonusXp, onHome, onRetry }: Props) {
+export default function BossResult({ won, bossHp, zoneNo, badge, firstClear, bonusXp, unlocked, onHome, onRetry }: Props) {
   return (
     <main className={styles.page}>
       {won ? (
@@ -27,6 +29,11 @@ export default function BossResult({ won, bossHp, zoneNo, badge, firstClear, bon
               {firstClear ? `首次通關獎勵 +${bonusXp} 經驗值` : '徽章已收藏（首次通關才有經驗值獎勵）'}
             </div>
           </div>
+          {unlocked && (
+            <div className={styles.unlock}>
+              🔓 第 {unlocked.no} 區「{unlocked.name}」已解鎖！
+            </div>
+          )}
         </>
       ) : (
         <>

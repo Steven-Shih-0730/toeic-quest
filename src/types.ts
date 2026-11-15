@@ -41,6 +41,8 @@ export interface Player {
   /** 關卡編號 1~50，第 N 區第 M 關 = (N-1)*10 + M */
   clearedStages: number[];
   badges: string[];
+  /** 對戰積分（CLAUDE.md 6.7），沒有時視為初始值 420 */
+  rating?: number;
 }
 
 export interface GameState {

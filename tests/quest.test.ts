@@ -5,6 +5,7 @@ import {
   INTERVIEWER_INDEX,
   QUEST_SIZE,
   buildDailyQuest,
+  buildStageQuest,
   nextQuestion,
   pickOption,
   reviewLabel,
@@ -20,7 +21,7 @@ const words = (items: QuestItem[]) => items.map((i) => i.question.word);
 
 describe('buildDailyQuest：出題（6.2）', () => {
   const seed = createSeed(D);
-  const items = buildDailyQuest(QUESTIONS, seed.progress, D, 1);
+  const items = buildDailyQuest(QUESTIONS, seed.progress, D, [1]);
 
   it('固定 5 題、不重複', () => {
     expect(items).toHaveLength(QUEST_SIZE);
@@ -36,6 +37,12 @@ describe('buildDailyQuest：出題（6.2）', () => {
     expect(items[INTERVIEWER_INDEX].question.tag).toBe('interviewer');
   });
 
+  it('到期字可以來自任何區域（itinerary 在第 5 區，第 5 區還沒開放也會出）', () => {
+    const itinerary = seed.progress.filter((p) => p.word === 'itinerary'); // 11/16 到期
+    const q = buildDailyQuest(QUESTIONS, itinerary, '2026-11-16', [1]);
+    expect(words(q)[0]).toBe('itinerary');
+  });
+
   it('其餘是一般情境題的新題，沒有教授陷阱題', () => {
     const rest = items.filter((_, i) => i >= 2 && i !== INTERVIEWER_INDEX);
     for (const it of rest) {
@@ -46,14 +53,14 @@ describe('buildDailyQuest：出題（6.2）', () => {
   });
 
   it('到期字超過 2 個時只取 2 個（最久沒複習的先）', () => {
-    const many = buildDailyQuest(QUESTIONS, seed.progress, '2026-11-20', 1);
+    const many = buildDailyQuest(QUESTIONS, seed.progress, '2026-11-20', [1]);
     expect(many.filter((i) => i.review)).toHaveLength(2);
     expect(words(many).slice(0, 2)).toEqual(['reimburse', 'invoice']);
   });
 
   it('到期字剛好是面試官題時，第 4 題換另一題面試官題', () => {
     const progress: WordProgress[] = [applyAnswer(undefined, 'apologize', false, '2026-11-14')];
-    const q = buildDailyQuest(QUESTIONS, progress, D, 1);
+    const q = buildDailyQuest(QUESTIONS, progress, D, [1]);
     expect(words(q)[0]).toBe('apologize');
     expect(q[INTERVIEWER_INDEX].question.tag).toBe('interviewer');
     expect(q[INTERVIEWER_INDEX].question.word).not.toBe('apologize');
@@ -62,32 +69,50 @@ describe('buildDailyQuest：出題（6.2）', () => {
   it('從沒答錯過的到期字標示「🔁 複習時間到」；昨天答錯標示「🔁 昨天答錯」', () => {
     const neverWrong = applyAnswer(undefined, 'budget', true, '2026-11-12'); // 11/15 到期
     const wrongYesterday = applyAnswer(undefined, 'agenda', false, '2026-11-14');
-    const q = buildDailyQuest(QUESTIONS, [wrongYesterday, neverWrong], D, 1);
+    const q = buildDailyQuest(QUESTIONS, [wrongYesterday, neverWrong], D, [1]);
     expect(reviewLabel(q[0])).toBe('🔁 昨天答錯');
     expect(reviewLabel(q[1])).toBe('🔁 複習時間到');
   });
 
   it('新題用完時：先補未記住且未到期（複習日近的先），再補已記住的字', () => {
-    const general = QUESTIONS.filter((q) => ['email', 'notice', 'meeting'].includes(q.tag));
-    // 全部一般題都有進度：前 13 個已記住，最後 2 個未記住、分別 5 天後與 2 天後到期
+    const general = QUESTIONS.filter((q) => q.zone === 1 && ['email', 'notice', 'meeting'].includes(q.tag));
+    // 第 1 區 11 題一般題都有進度：前 9 個已記住，最後 2 個未記住、分別 5 天後與 2 天後到期
     const progress: WordProgress[] = general.map((q, i) => ({
       word: q.word,
       wrongCount: 0,
-      correctStreak: i < 13 ? 3 : 1,
-      nextReview: i === 13 ? '2026-11-20' : '2026-11-17',
-      mastered: i < 13,
+      correctStreak: i < 9 ? 3 : 1,
+      nextReview: i === 9 ? '2026-11-20' : '2026-11-17',
+      mastered: i < 9,
     }));
-    const q = buildDailyQuest(QUESTIONS, progress, D, 1);
+    const q = buildDailyQuest(QUESTIONS, progress, D, [1]);
     const fill = q.filter((_, i) => i !== INTERVIEWER_INDEX).map((i) => i.question.word);
-    expect(fill[0]).toBe(general[14].word); // 2 天後到期
-    expect(fill[1]).toBe(general[13].word); // 5 天後到期
+    expect(fill[0]).toBe(general[10].word); // 2 天後到期
+    expect(fill[1]).toBe(general[9].word); // 5 天後到期
     expect(fill.slice(2).every((w) => progress.find((p) => p.word === w)?.mastered)).toBe(true);
     expect(q).toHaveLength(QUEST_SIZE);
   });
 });
 
+describe('buildStageQuest：地圖關卡', () => {
+  const seed = createSeed(D);
+  const stage = buildStageQuest(QUESTIONS, seed.progress, D, 2);
+
+  it('5 題、全部是該區題目、第 4 題面試官題、不放到期複習字', () => {
+    expect(stage).toHaveLength(QUEST_SIZE);
+    expect(stage.every((i) => i.question.zone === 2)).toBe(true);
+    expect(stage[INTERVIEWER_INDEX].question.tag).toBe('interviewer');
+    expect(stage.some((i) => i.review)).toBe(false);
+    expect(words(stage)).not.toContain('reimburse');
+  });
+
+  it('多個區域時今日關卡只從已開放的區域補題', () => {
+    const daily = buildDailyQuest(QUESTIONS, [], D, [1, 2]);
+    expect(daily.every((i) => [1, 2].includes(i.question.zone))).toBe(true);
+  });
+});
+
 describe('作答流程：蘇格拉底式提示（6.3）與經驗值（6.4）', () => {
-  const items = buildDailyQuest(QUESTIONS, createSeed(D).progress, D, 1);
+  const items = buildDailyQuest(QUESTIONS, createSeed(D).progress, D, [1]);
   const answerOf = (s: ReturnType<typeof startSession>) => s.items[s.idx].question.answer;
   const wrongOf = (s: ReturnType<typeof startSession>, n = 0) =>
     [0, 1, 2, 3].filter((i) => i !== answerOf(s))[n];

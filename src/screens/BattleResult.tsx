@@ -6,11 +6,12 @@ interface Props {
   me: PlayerInfo;
   outcome: BattleOutcome;
   reward: number;
+  rating: { before: number; after: number };
   onHome: () => void;
   onRematch: () => void;
 }
 
-export default function BattleResult({ me, outcome, reward, onHome, onRematch }: Props) {
+export default function BattleResult({ me, outcome, reward, rating, onHome, onRematch }: Props) {
   const { myScore, oppScore, opponent, myWords } = outcome;
   const win = myScore > oppScore;
   const tie = myScore === oppScore;
@@ -35,6 +36,13 @@ export default function BattleResult({ me, outcome, reward, onHome, onRematch }:
 
       <div className={styles.reward}>
         {win ? '勝利獎勵' : '參戰獎勵'} +{reward} 經驗值
+      </div>
+      <div className={styles.rating}>
+        🏆 對戰積分 {rating.before} → <b>{rating.after}</b>
+        <span className={rating.after >= rating.before ? styles.up : styles.down}>
+          （{rating.after - rating.before >= 0 ? '+' : ''}
+          {rating.after - rating.before}）
+        </span>
       </div>
 
       <section className={styles.box}>

@@ -26,6 +26,11 @@
 
 .reward { text-align: center; font-size: 15px; font-weight: 700; color: var(--gold-soft); }
 
+.rating { text-align: center; font-size: 15px; font-weight: 700; margin-top: -8px; }
+.rating b { color: var(--gold); font-size: 18px; }
+.up { color: #7ff0ae; }
+.down { color: var(--red-soft); }
+
 .box {
   padding: 14px;
   border-radius: 16px;

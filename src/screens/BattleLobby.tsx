@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import styles from './BattleLobby.module.css';
 import RoomView from './RoomView';
+import Leaderboard from '../components/Leaderboard';
 import { BOT_PROFILE } from '../lib/battle/bot';
 import { isValidRoomCode, randomRoomCode } from '../lib/battle/realtime';
 import type { RealtimeRoom } from '../lib/battle/realtime';
@@ -221,6 +222,8 @@ export default function BattleLobby({
           </button>
         </form>
       )}
+
+      <Leaderboard player={player} />
 
       <button type="button" className={styles.renameBtn} onClick={onEditName}>
         目前暱稱：{player.name}（修改）
