@@ -19,7 +19,7 @@ TOEIC Quest 是給「準備多益的大學生」用的手機網頁 App。它用 
 - [x] 階段 2：題庫、間隔重複邏輯與單元測試
 - [x] 階段 3：今日關卡、提示機制、結算頁
 - [x] 階段 4：Boss 關與對戰（機器人對手）
-- [ ] 階段 5：真人連線對戰（Supabase Realtime）
+- [x] 階段 5：真人連線對戰（Supabase Realtime）
 - [ ] 階段 6：部署到 Vercel
 
 完成一個階段就把對應項目打勾。
@@ -58,7 +58,8 @@ src/
   lib/quest.ts             # 今日關卡出題與作答流程
   lib/boss.ts              # Boss 關抽題與血量／生命
   lib/storage.ts           # localStorage 讀寫
-  lib/battle/              # 對戰：types.ts（Opponent 介面）、engine.ts（房主規則）、bot.ts（機器人）、realtime.ts（階段 5）
+  lib/battle/              # 對戰：types.ts（Opponent 介面）、engine.ts（房主規則）、host.ts（房主控場與計時）、
+                           #   bot.ts（機器人）、realtime.ts（房間與連線對手）、supabaseClient.ts（Supabase 連線）
   screens/                 # Home, Quest, Result, Boss, BossResult, BattleLobby, Battle, BattleResult
   components/              # 共用元件：TopBar, DemoPanel, ProgressBar, ComboBanner, CoachHint, TimerRing ...
 tests/                     # Vitest
@@ -276,6 +277,11 @@ type BattleMsg =
   | { type: 'end';      scores: Record<string, number> };
 ```
 
+- 實作備註：
+  - 所有訊息走同一個 Broadcast 事件 `msg`；Presence 的 key 與連線用的 playerId 是 `player.id` 加隨機尾碼（同一個瀏覽器開兩個分頁也能測）。
+  - 房間成員依加入時間排序，前 2 位入座，第 3 位以後顯示「房間已滿」並離開。
+  - 房主送出 `start` 後等 1.5 秒才送第 1 題，讓對方畫面先準備好；對戰畫面建立前收到的訊息會先暫存。
+  - 環境變數 `VITE_SUPABASE_ANON_KEY` 可以填新版 publishable key（`sb_publishable_…`）。
 - 剩餘時間由作答者自己計算並回報（第一版可接受時鐘誤差）。
 - 分數以房主計算的 `reveal.scores` 為準，雙方畫面都顯示這個值。
 - 對戰中答錯的字，也要寫進各自的快忘清單。

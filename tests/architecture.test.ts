@@ -21,9 +21,10 @@ describe('架構規範', () => {
     expect(source).not.toMatch(/from\s+['"]react(-dom)?(\/[^'"]*)?['"]/);
   });
 
-  it('Battle.tsx 沒有引用機器人（bot.ts、BotOpponent、BOT_）', () => {
+  it('Battle.tsx 沒有引用機器人的程式（bot.ts、BotOpponent、BOT_、阿明）', () => {
     const source = Object.values(battleScreen)[0];
     expect(source).toBeTruthy();
-    expect(source).not.toMatch(/battle\/bot|BotOpponent|BOT_|機器人|阿明/);
+    // 「改跟機器人打完」是規格要求的按鈕文字，替補對手由外部 createFallback 提供
+    expect(source).not.toMatch(/battle\/bot|battle\/realtime|BotOpponent|RealtimeOpponent|BOT_|阿明/);
   });
 });

@@ -14,8 +14,10 @@ import Result from './screens/Result';
 import { QUESTIONS } from './data/questions';
 import { createSeed } from './data/seed';
 import { CURRENT_ZONE, ZONES } from './data/zones';
-import { BotOpponent } from './lib/battle/bot';
-import type { Opponent, PlayerInfo } from './lib/battle/types';
+import { BOT_PROFILE, BotOpponent } from './lib/battle/bot';
+import { RealtimeRoom } from './lib/battle/realtime';
+import { getSupabase, supabaseRoomChannel } from './lib/battle/supabaseClient';
+import type { Opponent, PlayerInfo, ResumeInfo } from './lib/battle/types';
 import { buildBossQuestions } from './lib/boss';
 import { addDays, formatShortDate, getOffsetDays, setOffsetDays, today } from './lib/clock';
 import { buildDailyQuest } from './lib/quest';
@@ -91,8 +93,14 @@ export default function App() {
   const [result, setResult] = useState<{ summary: QuestSummary; streakUp: boolean } | null>(null);
   const [boss, setBoss] = useState<{ questions: Question[]; key: number } | null>(null);
   const [bossEnd, setBossEnd] = useState<BossEnd | null>(null);
-  const [battle, setBattle] = useState<{ key: number; createOpponent: () => Opponent; myWords: string[] } | null>(null);
-  const [battleEnd, setBattleEnd] = useState<{ outcome: BattleOutcome; reward: number } | null>(null);
+  const [battle, setBattle] = useState<{
+    key: number;
+    me: PlayerInfo;
+    createOpponent: () => Opponent;
+    createFallback?: (resume: ResumeInfo) => Opponent;
+    myWords: string[];
+  } | null>(null);
+  const [battleEnd, setBattleEnd] = useState<{ me: PlayerInfo; outcome: BattleOutcome; reward: number } | null>(null);
   const { todayIso, game } = world;
   const zone = ZONES[CURRENT_ZONE - 1];
   const me: PlayerInfo = { id: game.player.id, name: game.player.name, level: game.player.level, avatar: '🧑' };
@@ -172,11 +180,40 @@ export default function App() {
 
   // ───────── 對戰 ─────────
 
+  const myForgetWords = () => forgetList(game.progress).map((p) => p.word);
+
   const startBotBattle = () => {
     setBattle({
       key: Date.now(),
+      me,
       createOpponent: () => new BotOpponent({ bank: QUESTIONS }),
-      myWords: forgetList(game.progress).map((p) => p.word),
+      myWords: myForgetWords(),
+    });
+    go('battle');
+  };
+
+  /** 建立或加入連線房間；沒有設定 Supabase 時回傳 null */
+  const openRoom = (code: string, isHost: boolean): RealtimeRoom | null => {
+    const sb = getSupabase();
+    if (!sb) return null;
+    // 同一個瀏覽器開兩個分頁時 player.id 相同，連線用的 id 加上隨機尾碼
+    const roomMe: PlayerInfo = { ...me, id: `${me.id}-${Math.random().toString(36).slice(2, 6)}` };
+    return new RealtimeRoom(supabaseRoomChannel(sb, code, roomMe.id), code, roomMe, isHost, QUESTIONS, myForgetWords());
+  };
+
+  const startRoomBattle = (room: RealtimeRoom) => {
+    setBattle({
+      key: Date.now(),
+      me: room.snapshot.me,
+      createOpponent: () => room.createOpponent(),
+      // 對手斷線：機器人沿用原對手的 id 接手，分數接得上
+      createFallback: (resume) =>
+        new BotOpponent({
+          bank: QUESTIONS,
+          profile: { ...BOT_PROFILE, id: resume.opponentId, name: `${BOT_PROFILE.name}（代打）` },
+          resume,
+        }),
+      myWords: myForgetWords(),
     });
     go('battle');
   };
@@ -184,7 +221,7 @@ export default function App() {
   const finishBattle = (outcome: BattleOutcome) => {
     const reward = battleReward(outcome.myScore, outcome.oppScore);
     setWorld((w) => ({ ...w, game: { ...w.game, player: withXp(w.game.player, reward) } }));
-    setBattleEnd({ outcome, reward });
+    setBattleEnd({ me: battle?.me ?? me, outcome, reward });
     setBattle(null);
     go('battleResult');
   };
@@ -291,14 +328,18 @@ export default function App() {
           onSetName={setName}
           onEditName={() => setWorld({ todayIso, game: { ...game, player: { ...game.player, nameConfirmed: false } } })}
           onQuickMatch={startBotBattle}
+          realtimeAvailable={getSupabase() !== null}
+          openRoom={openRoom}
+          onRoomStart={startRoomBattle}
         />
       )}
       {screen === 'battle' && battle && (
         <Battle
           key={battle.key}
-          me={me}
+          me={battle.me}
           myWords={battle.myWords}
           createOpponent={battle.createOpponent}
+          createFallback={battle.createFallback}
           onRecord={(word, correct) => applyAnswer({ word, correct }, 0)}
           onFinish={finishBattle}
           onLeave={() => go('home')}
@@ -306,7 +347,7 @@ export default function App() {
       )}
       {screen === 'battleResult' && battleEnd && (
         <BattleResult
-          me={me}
+          me={battleEnd.me}
           outcome={battleEnd.outcome}
           reward={battleEnd.reward}
           onHome={() => go('home')}

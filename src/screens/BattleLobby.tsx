@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import styles from './BattleLobby.module.css';
+import RoomView from './RoomView';
 import { BOT_PROFILE } from '../lib/battle/bot';
+import { isValidRoomCode, randomRoomCode } from '../lib/battle/realtime';
+import type { RealtimeRoom } from '../lib/battle/realtime';
 import type { Player } from '../types';
 
 interface Props {
@@ -10,14 +13,42 @@ interface Props {
   onEditName: () => void;
   /** 快速配對成功，開始跟機器人對戰 */
   onQuickMatch: () => void;
+  /** 是否已設定 Supabase 連線 */
+  realtimeAvailable: boolean;
+  /** 建立或加入房間（isHost = 建立房間的人） */
+  openRoom: (code: string, isHost: boolean) => RealtimeRoom | null;
+  /** 房間裡雙方都準備好，進入對戰 */
+  onRoomStart: (room: RealtimeRoom) => void;
 }
 
 const NAME_MAX = 10;
 
-export default function BattleLobby({ player, onSetName, onEditName, onQuickMatch }: Props) {
+export default function BattleLobby({
+  player,
+  onSetName,
+  onEditName,
+  onQuickMatch,
+  realtimeAvailable,
+  openRoom,
+  onRoomStart,
+}: Props) {
   const [phase, setPhase] = useState<'idle' | 'searching' | 'found'>('idle');
   const [nameDraft, setNameDraft] = useState(player.name);
+  const [room, setRoom] = useState<RealtimeRoom | null>(null);
+  const [joinOpen, setJoinOpen] = useState(false);
+  const [codeDraft, setCodeDraft] = useState('');
   const timers = useRef<number[]>([]);
+  const roomRef = useRef<RealtimeRoom | null>(null);
+  const roomStartedRef = useRef(false);
+  roomRef.current = room;
+
+  // 離開大廳時，還沒開始對戰的房間要斷線
+  useEffect(
+    () => () => {
+      if (roomRef.current && !roomStartedRef.current) roomRef.current.leave();
+    },
+    [],
+  );
 
   const clearTimers = () => {
     timers.current.forEach((id) => window.clearTimeout(id));
@@ -34,6 +65,16 @@ export default function BattleLobby({ player, onSetName, onEditName, onQuickMatc
   const cancel = () => {
     clearTimers();
     setPhase('idle');
+  };
+
+  const enterRoom = (code: string, isHost: boolean) => {
+    const r = openRoom(code, isHost);
+    if (r) setRoom(r);
+  };
+
+  const leaveRoom = () => {
+    room?.leave();
+    setRoom(null);
   };
 
   const saveName = () => {
@@ -69,6 +110,19 @@ export default function BattleLobby({ player, onSetName, onEditName, onQuickMatc
           </button>
         </form>
       </main>
+    );
+  }
+
+  if (room) {
+    return (
+      <RoomView
+        room={room}
+        onStart={(r) => {
+          roomStartedRef.current = true;
+          onRoomStart(r);
+        }}
+        onLeave={leaveRoom}
+      />
     );
   }
 
@@ -127,14 +181,46 @@ export default function BattleLobby({ player, onSetName, onEditName, onQuickMatc
       </button>
 
       <div className={styles.roomRow}>
-        <button type="button" className={styles.roomBtn} disabled>
+        <button
+          type="button"
+          className={styles.roomBtn}
+          disabled={!realtimeAvailable}
+          onClick={() => enterRoom(randomRoomCode(), true)}
+        >
           🏠 建立房間
         </button>
-        <button type="button" className={styles.roomBtn} disabled>
+        <button
+          type="button"
+          className={styles.roomBtn}
+          disabled={!realtimeAvailable}
+          onClick={() => setJoinOpen((v) => !v)}
+        >
           🔑 輸入房號加入
         </button>
       </div>
-      <p className={styles.soon}>和朋友連線對戰即將開放</p>
+      {!realtimeAvailable && <p className={styles.soon}>尚未設定連線</p>}
+      {realtimeAvailable && joinOpen && (
+        <form
+          className={styles.joinRow}
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (isValidRoomCode(codeDraft)) enterRoom(codeDraft, false);
+          }}
+        >
+          <input
+            className={styles.codeInput}
+            value={codeDraft}
+            onChange={(e) => setCodeDraft(e.target.value.replace(/\D/g, '').slice(0, 4))}
+            inputMode="numeric"
+            placeholder="4 位數房號"
+            aria-label="房號"
+            autoFocus
+          />
+          <button type="submit" className={styles.joinBtn} disabled={!isValidRoomCode(codeDraft)}>
+            加入
+          </button>
+        </form>
+      )}
 
       <button type="button" className={styles.renameBtn} onClick={onEditName}>
         目前暱稱：{player.name}（修改）

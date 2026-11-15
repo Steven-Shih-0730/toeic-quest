@@ -18,6 +18,28 @@ export type BattleEvent =
 
 export type BattleListener = (e: BattleEvent) => void;
 
+/** 連線對戰在 channel 上傳送的訊息（CLAUDE.md 8.2） */
+export type BattleMsg =
+  | { type: 'ready'; playerId: string; name: string; level: number; dueWords: string[] }
+  | { type: 'start'; questionIds: string[]; sourceOf: Record<string, string> }
+  | { type: 'question'; index: number; startAt: number }
+  | { type: 'answer'; playerId: string; index: number; choice: number; remainingMs: number }
+  | { type: 'reveal'; index: number; scores: Record<string, number> }
+  | { type: 'end'; scores: Record<string, number> };
+
+/** 對手斷線後改打機器人時，接手所需的資訊 */
+export interface ResumeInfo {
+  questionIds: string[];
+  sourceOf: Record<string, string>;
+  /** 從這一題接手 */
+  index: number;
+  scores: Record<string, number>;
+  /** 原對手的 id（分數沿用這個 key） */
+  opponentId: string;
+  /** 這一題還沒公布：沿用開始時間與我的作答，原對手這題以 0 分計 */
+  inProgress?: { startAt: number; myAnswer?: { choice: number; remainingMs: number } };
+}
+
 export interface Opponent {
   readonly profile: PlayerInfo;
   /** 開始對戰；呼叫前請先 subscribe */

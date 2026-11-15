@@ -123,6 +123,15 @@
   text-align: center;
 }
 .dialogTitle { font-size: 20px; font-weight: 900; }
+.dialogBtnAlt {
+  min-height: 50px;
+  border-radius: 14px;
+  border: none;
+  background: var(--gold);
+  color: var(--gold-text);
+  font-size: 16px;
+  font-weight: 900;
+}
 .dialogBtn {
   min-height: 50px;
   border-radius: 14px;

@@ -195,6 +195,35 @@ describe('BotOpponent：機器人對手', () => {
     expect(end.scores[BOT_PROFILE.id]).toBeGreaterThan(70);
   });
 
+  it('接手進行中的題目：沿用我的作答，原對手這題 0 分，下一題起由機器人作答', () => {
+    const questionIds = QUESTIONS.slice(0, 5).map((q) => q.id);
+    const q2 = QUESTIONS[2];
+    const startAt = Date.now() - 3000; // 這題已經過 3 秒
+    const bot = new BotOpponent({
+      bank: QUESTIONS,
+      profile: { ...BOT_PROFILE, id: 'old-opp' },
+      rng: () => 0, // 2 秒、答對
+      resume: {
+        questionIds,
+        sourceOf: {},
+        index: 2,
+        scores: { me: 100, 'old-opp': 90 },
+        inProgress: { startAt, myAnswer: { choice: q2.answer, remainingMs: 6500 } },
+      },
+    });
+    const events: BattleEvent[] = [];
+    bot.subscribe((e) => events.push(e));
+    bot.start({ ...ME, dueWords: [] });
+
+    // 我已作答、原對手視為答錯 → 立即公布
+    expect(events.map((e) => e.type)).toEqual(['start', 'question', 'reveal']);
+    expect(events[1]).toEqual({ type: 'question', index: 2, startAt });
+    expect((events[2] as Extract<BattleEvent, { type: 'reveal' }>).scores).toEqual({ me: 170, 'old-opp': 90 });
+
+    vi.advanceTimersByTime(REVEAL_MS + 2000);
+    expect(events.some((e) => e.type === 'opponentAnswered' && e.index === 3)).toBe(true);
+  });
+
   it('dispose 後不再送出任何事件', () => {
     const { bot, events } = setup(() => 0);
     const n = events.length;

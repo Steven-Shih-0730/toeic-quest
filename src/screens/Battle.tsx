@@ -9,7 +9,7 @@ import type { OptionState } from '../components/OptionButton';
 import TimerRing from '../components/TimerRing';
 import { QUESTIONS } from '../data/questions';
 import { QUESTION_MS } from '../lib/battle/engine';
-import type { BattleEvent, Opponent, PlayerInfo } from '../lib/battle/types';
+import type { BattleEvent, Opponent, PlayerInfo, ResumeInfo } from '../lib/battle/types';
 import { COMBO_THRESHOLD } from '../lib/scoring';
 import type { Question } from '../types';
 
@@ -32,6 +32,8 @@ interface Props {
   /** 我的快忘清單（到期的在前），給房主選題用 */
   myWords: string[];
   createOpponent: () => Opponent;
+  /** 對手離線時，用來接手打完的對手（沒有就只能返回首頁） */
+  createFallback?: (resume: ResumeInfo) => Opponent;
   /** 每題公布時回報我的作答結果（寫入間隔重複） */
   onRecord: (word: string, correct: boolean) => void;
   onFinish: (outcome: BattleOutcome) => void;
@@ -67,7 +69,7 @@ const INITIAL: View = {
   left: false,
 };
 
-export default function Battle({ me, myWords, createOpponent, onRecord, onFinish, onLeave }: Props) {
+export default function Battle({ me, myWords, createOpponent, createFallback, onRecord, onFinish, onLeave }: Props) {
   const [view, setView] = useState<View>(INITIAL);
   const [now, setNow] = useState(() => Date.now());
   const [banner, setBanner] = useState<{ combo: number; key: number } | null>(null);
@@ -77,27 +79,44 @@ export default function Battle({ me, myWords, createOpponent, onRecord, onFinish
   const viewRef = useRef(view);
   viewRef.current = view;
   const oppRef = useRef<Opponent | null>(null);
+  const detachRef = useRef<() => void>(() => {});
+  const myAnswerRef = useRef<{ index: number; choice: number; remainingMs: number } | null>(null);
   const comboRef = useRef(0);
   const logRef = useRef<BattleWordLog[]>([]);
   const cbRef = useRef({ onRecord, onFinish });
   cbRef.current = { onRecord, onFinish };
 
-  useEffect(() => {
-    const opp = createOpponent();
+  /** 接上一個對手：訂閱事件並開始 */
+  const attach = (opp: Opponent) => {
     oppRef.current = opp;
     setOpponent(opp.profile);
-    comboRef.current = 0;
-    logRef.current = [];
 
     const handle = (e: BattleEvent) => {
       const v = viewRef.current;
       switch (e.type) {
         case 'start':
-          setView({ ...INITIAL, questionIds: e.questionIds, sourceOf: e.sourceOf });
+          // 同一組題目＝替補對手接手：保留目前進度與分數
+          setView((prev) =>
+            prev.questionIds.join() === e.questionIds.join()
+              ? { ...prev, sourceOf: e.sourceOf }
+              : { ...INITIAL, questionIds: e.questionIds, sourceOf: e.sourceOf, scores: prev.scores },
+          );
           break;
         case 'question':
           setBanner(null);
-          setView((prev) => ({ ...prev, index: e.index, startAt: e.startAt, phase: 'question', myChoice: null, oppAnswered: false, gains: {} }));
+          setView((prev) => {
+            const same = prev.index === e.index && prev.phase === 'question';
+            return {
+              ...prev,
+              index: e.index,
+              startAt: e.startAt,
+              phase: 'question',
+              myChoice: same ? prev.myChoice : null,
+              oppAnswered: false,
+              gains: {},
+              left: false,
+            };
+          });
           break;
         case 'opponentAnswered':
           setView((prev) => (prev.index === e.index ? { ...prev, oppAnswered: true } : prev));
@@ -131,11 +150,18 @@ export default function Battle({ me, myWords, createOpponent, onRecord, onFinish
     };
 
     const unsubscribe = opp.subscribe(handle);
-    opp.start({ ...me, dueWords: myWords });
-    return () => {
+    detachRef.current = () => {
       unsubscribe();
       opp.dispose();
     };
+    opp.start({ ...me, dueWords: myWords });
+  };
+
+  useEffect(() => {
+    comboRef.current = 0;
+    logRef.current = [];
+    attach(createOpponent());
+    return () => detachRef.current();
     // 只在進入畫面時建立一次對手
   }, []);
 
@@ -146,27 +172,66 @@ export default function Battle({ me, myWords, createOpponent, onRecord, onFinish
     return () => window.clearInterval(id);
   }, [view.phase, view.index]);
 
+  /** 對手離線 → 改由替補對手從目前進度接手 */
+  const continueWithFallback = () => {
+    if (!createFallback || !opponent) return;
+    const v = viewRef.current;
+    const inQuestion = v.phase === 'question';
+    const mine = myAnswerRef.current;
+    const resume: ResumeInfo = {
+      questionIds: v.questionIds,
+      sourceOf: v.sourceOf,
+      index: inQuestion ? v.index : v.index + 1,
+      scores: v.scores,
+      opponentId: opponent.id,
+      inProgress: inQuestion
+        ? { startAt: v.startAt, myAnswer: mine && mine.index === v.index ? mine : undefined }
+        : undefined,
+    };
+    detachRef.current();
+    setView((prev) => ({ ...prev, left: false }));
+    attach(createFallback(resume));
+  };
+
   const q: Question | undefined = BYID.get(view.questionIds[view.index]);
   const remaining = view.phase === 'question' ? Math.max(0, view.startAt + QUESTION_MS - now) : 0;
   const oppId = opponent?.id ?? '';
 
   const pick = (choice: number) => {
     const v = viewRef.current;
-    if (v.phase !== 'question' || v.myChoice !== null) return;
+    if (v.phase !== 'question' || v.myChoice !== null || v.left) return;
     const ms = v.startAt + QUESTION_MS - Date.now();
     if (ms <= 0) return;
     // 先更新 ref：對手若已作答，answer() 可能同步觸發 reveal，事件處理要讀到我的選擇
     const next = { ...v, myChoice: choice };
     viewRef.current = next;
+    myAnswerRef.current = { index: v.index, choice, remainingMs: ms };
     setView(next);
     oppRef.current?.answer(v.index, choice, ms);
   };
+
+  const leftDialog = view.left && (
+    <div className={styles.overlay} role="alertdialog" aria-label="對手已離線">
+      <div className={styles.dialog}>
+        <div className={styles.dialogTitle}>對手已離線</div>
+        {createFallback && (
+          <button type="button" className={styles.dialogBtnAlt} onClick={continueWithFallback}>
+            🤖 改跟機器人打完
+          </button>
+        )}
+        <button type="button" className={styles.dialogBtn} onClick={onLeave}>
+          返回首頁
+        </button>
+      </div>
+    </div>
+  );
 
   if (!q || !opponent) {
     return (
       <main className={styles.waiting}>
         <div className={styles.spinner} aria-hidden="true" />
         <div>準備題目中…</div>
+        {leftDialog}
       </main>
     );
   }
@@ -231,7 +296,7 @@ export default function Battle({ me, myWords, createOpponent, onRecord, onFinish
             </span>
             <span className={styles.src}>{srcLabel}</span>
           </div>
-          <div className={styles.stem}>{q.stem.replace('____', '＿＿＿＿')}</div>
+          <div className={styles.stem}>{q.stem.replace('____', '________')}</div>
           <div className={styles.options}>
             {q.options.map((text, i) => (
               <OptionButton
@@ -255,17 +320,7 @@ export default function Battle({ me, myWords, createOpponent, onRecord, onFinish
       </div>
 
       {banner && <ComboBanner playKey={banner.key} text={`🔥 連續答對 ${banner.combo} 題　得分 × 1.25`} />}
-
-      {view.left && (
-        <div className={styles.overlay} role="alertdialog" aria-label="對手已離線">
-          <div className={styles.dialog}>
-            <div className={styles.dialogTitle}>對手已離線</div>
-            <button type="button" className={styles.dialogBtn} onClick={onLeave}>
-              返回首頁
-            </button>
-          </div>
-        </div>
-      )}
+      {leftDialog}
     </main>
   );
 }

@@ -151,3 +151,56 @@
   from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: none; }
 }
+
+/* ───────── 連線房間 ───────── */
+.joinRow { display: flex; gap: 10px; margin-top: -4px; }
+.codeInput {
+  flex: 1;
+  min-width: 0;
+  height: 50px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 2px solid var(--line-strong);
+  background: var(--card-inner);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: 0.3em;
+  text-align: center;
+}
+.codeInput:focus { outline: none; border-color: var(--gold); }
+.joinBtn {
+  min-width: 84px;
+  border-radius: 12px;
+  border: none;
+  background: var(--blue);
+  color: var(--blue-text);
+  font-size: 16px;
+  font-weight: 900;
+}
+.joinBtn:disabled { opacity: 0.5; }
+
+.code { font-size: 44px; font-weight: 900; letter-spacing: 0.25em; color: var(--gold); padding-left: 0.25em; }
+
+.members { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.member {
+  padding: 14px 8px;
+  border-radius: 16px;
+  background: var(--card);
+  border: 2px solid;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+.memberMe { border-color: var(--green); }
+.memberOpp { border-color: var(--red); }
+.memberEmpty { border-color: var(--line); border-style: dashed; color: var(--text-dim); }
+.memberAvatar { font-size: 36px; }
+.memberName { font-weight: 900; font-size: 14px; display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; align-items: center; }
+.hostTag { padding: 1px 6px; border-radius: 999px; background: var(--gold); color: var(--gold-text); font-size: 11px; }
+.readyOn { font-size: 13px; font-weight: 700; color: var(--green); }
+.readyOff { font-size: 13px; color: var(--text-muted); }
+.matchBtn:disabled { opacity: 0.55; transform: none; box-shadow: 0 5px 0 #b98a12; }
