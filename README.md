@@ -142,3 +142,7 @@ LICENSE             MIT 授權
 ## 授權
 
 [MIT](LICENSE) © 2026 施定宇 (Steven Shih)。歡迎自由使用、修改、拿去當教材；題庫的題目全部原創，可以一起沿用。
+
+---
+
+<p align="center">Made by 施定宇 (Steven Shih)・2026 AI 時代青年實戰工作坊</p>
